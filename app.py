@@ -41,6 +41,19 @@ except ImportError:
 # Suppress huggingface symlink warning on standard Windows installs
 os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
+# Automatically load .env file if present
+_env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+if os.path.isfile(_env_file):
+    try:
+        with open(_env_file, "r", encoding="utf-8") as _ef:
+            for _line in _ef:
+                _line = _line.strip()
+                if _line and not _line.startswith("#") and "=" in _line:
+                    _k, _v = _line.split("=", 1)
+                    os.environ.setdefault(_k.strip(), _v.strip())
+    except Exception:
+        pass
+
 def ensure_windows_runtime_dlls():
     """
     On Windows machines without global VC++ 2015-2022 redistributable, ensure ctranslate2
@@ -230,6 +243,70 @@ def sanitize_filename(name: str) -> str:
     return clean[:60] if len(clean) > 60 else clean
 
 
+_KHMER_RE = re.compile(r"[\u1780-\u17FF]")
+
+# MyMemory expects RFC3066 codes (e.g. zh-CN), not bare ISO 639-1 codes.
+_MYMEMORY_LANG_MAP = {
+    "zh": "zh-CN", "zh-cn": "zh-CN", "zh-tw": "zh-TW",
+    "en": "en-GB", "ja": "ja-JP", "ko": "ko-KR",
+    "th": "th-TH", "vi": "vi-VN", "id": "id-ID",
+    "fr": "fr-FR", "de": "de-DE", "es": "es-ES",
+    "ru": "ru-RU", "ar": "ar-SA", "hi": "hi-IN",
+    "pt": "pt-PT", "tr": "tr-TR", "km": "km-KH",
+}
+
+
+def contains_khmer(text: str) -> bool:
+    """True if the text contains at least one Khmer script character."""
+    return bool(text and _KHMER_RE.search(text))
+
+
+def clean_translated_text(text: str) -> str:
+    """Normalize provider output (decode entities, strip HTML/spacing artifacts)."""
+    if not text:
+        return ""
+    import html as _html
+    text = _html.unescape(text)
+    text = text.replace("\u00a0", " ").replace("\u200b", "").replace("\ufeff", "")
+    text = re.sub(r"&\s*#\s*\d+\s*;", "", text)   # e.g. "& # 160;"
+    text = re.sub(r"&#?\w+;", "", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    return text.strip()
+
+
+def mymemory_language_code(lang: str) -> str:
+    """Map an ISO 639-1 language code to a MyMemory-compatible code."""
+    if not lang:
+        return ""
+    return _MYMEMORY_LANG_MAP.get(lang.lower(), lang)
+
+
+def get_configured_proxies(user_proxy: str = "") -> dict:
+    """Returns proxy dictionary for requests, deep-translator, and edge-tts."""
+    if user_proxy and user_proxy.strip():
+        p = user_proxy.strip()
+        if not (p.startswith("http://") or p.startswith("https://") or p.startswith("socks5://")):
+            p = f"http://{p}"
+        return {"http": p, "https": p}
+
+    for k in ("HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "ALL_PROXY", "all_proxy"):
+        val = os.environ.get(k)
+        if val:
+            return {"http": val, "https": val}
+
+    # Auto-detect local proxy ports if running (e.g. Clash 7890, v2ray 10809)
+    import socket
+    for port in (7890, 10809, 10808):
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=0.15):
+                p = f"http://127.0.0.1:{port}"
+                return {"http": p, "https": p}
+        except (OSError, socket.timeout):
+            pass
+    return {}
+
+
+
 def get_media_duration(file_path: str, ffmpeg_exe: str) -> float:
     """Determines media duration using ffprobe or ffmpeg metadata parse."""
     ffprobe_exe = resolve_ffprobe_path(ffmpeg_exe)
@@ -371,6 +448,19 @@ class DubbingAPI:
         except Exception as e:
             return {"error": str(e)}
 
+    def close_app(self) -> dict:
+        """Force quits the desktop application immediately."""
+        def _force_exit():
+            time.sleep(0.15)
+            if self._window:
+                try:
+                    self._window.destroy()
+                except Exception:
+                    pass
+            os._exit(0)
+        threading.Thread(target=_force_exit, daemon=True).start()
+        return {"status": "quitting"}
+
     def open_output_folder(self, path: str = None) -> dict:
         """Opens the output folder in Windows Explorer."""
         target_dir = path if (path and os.path.exists(path)) else OUTPUT_DIR
@@ -428,6 +518,12 @@ class DubbingAPI:
         whisper_model_name = options.get("whisper_model", "base")
         speech_rate = options.get("speech_rate", "+0%")
         remux_mode = options.get("remux_mode", "replace")
+        proxy = options.get("proxy", "").strip()
+        gemini_api_key = options.get("gemini_api_key", "").strip() or os.environ.get("GEMINI_API_KEY", "").strip()
+        audio_delay_ms = float(options.get("audio_delay_ms", 250))
+        production_mode = options.get("production_mode", "recap")
+        if production_mode == "recap":
+            remux_mode = "duck"  # In recap mode, background audio ducking keeps dramatic movie score & SFX
 
         # Unique session stem directory for this job
         job_id = int(time.time())
@@ -461,14 +557,21 @@ class DubbingAPI:
             # =========================================================
             # STAGE 3: Speech-to-Text (faster-whisper)
             # =========================================================
-            segments = self._stage_3_transcribe(extracted_wav_path, whisper_model_name, video_duration)
+            segments, source_language = self._stage_3_transcribe(extracted_wav_path, whisper_model_name, video_duration)
             if self._is_aborted:
                 return
 
             # =========================================================
-            # STAGE 4: Translation to Khmer (deep-translator)
+            # STAGE 4: Script Generation (Drama Recap Storyteller or Direct Dubbing)
             # =========================================================
-            translated_segments = self._stage_4_translate(segments)
+            if production_mode == "recap":
+                translated_segments = self._stage_4_recap_storyteller(
+                    segments, source_language, proxy, gemini_api_key, video_duration
+                )
+            else:
+                translated_segments = self._stage_4_translate(
+                    segments, source_language, proxy, gemini_api_key
+                )
             if self._is_aborted:
                 return
 
@@ -476,7 +579,7 @@ class DubbingAPI:
             # STAGE 5: Voiceover Synthesis (edge-tts) & Audio Alignment
             # =========================================================
             aligned_voiceover_wav = self._stage_5_synthesize_voiceover(
-                translated_segments, voice, speech_rate, video_duration, job_stem_dir
+                translated_segments, voice, speech_rate, video_duration, job_stem_dir, proxy, audio_delay_ms
             )
             if self._is_aborted:
                 return
@@ -580,7 +683,7 @@ class DubbingAPI:
                 )
 
         ydl_opts = {
-            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            'format': 'bestvideo[vcodec^=avc1][ext=mp4]+bestaudio[ext=m4a]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
             'outtmpl': download_template,
             'progress_hooks': [ytdl_progress_hook],
             'ffmpeg_location': self._ffmpeg_path,
@@ -663,7 +766,7 @@ class DubbingAPI:
         )
         return output_wav
 
-    def _stage_3_transcribe(self, wav_path: str, model_size: str, total_duration: float = 60.0) -> list:
+    def _stage_3_transcribe(self, wav_path: str, model_size: str, total_duration: float = 60.0) -> tuple:
         """Runs faster-whisper speech recognition with int8 quantization."""
         self._emit_progress(
             stage=3,
@@ -687,7 +790,16 @@ class DubbingAPI:
             log_text="Running transcription inference..."
         )
 
-        segments_iter, info = model.transcribe(wav_path, beam_size=5)
+        try:
+            segments_iter, info = model.transcribe(
+                wav_path,
+                beam_size=5,
+                vad_filter=True,
+                vad_parameters=dict(min_silence_duration_ms=400)
+            )
+        except Exception:
+            segments_iter, info = model.transcribe(wav_path, beam_size=5)
+        detected_language = getattr(info, "language", None) or "auto"
         self._emit_progress(
             stage=3,
             stage_name="Speech-to-Text",
@@ -751,65 +863,504 @@ class DubbingAPI:
             log_level="SUCCESS",
             log_text=f"Successfully extracted {len(segments)} timestamped dialogue segments."
         )
-        return segments
+        return segments, detected_language
 
-    def _stage_4_translate(self, segments: list) -> list:
-        """Translates each dialogue segment to natural spoken Khmer (km)."""
+    def _stage_4_recap_storyteller(self, segments: list, source_language: str = "auto",
+                                   proxy_url: str = "", gemini_api_key: str = "",
+                                   video_duration: float = 60.0) -> list:
+        """
+        Analyzes the full drama scene and generates an engaging, thrilling
+        movie recap narration script in spoken Khmer (សង្ខេបរឿង).
+        Maps narrative chunks across the video timeline.
+        """
+        self._emit_progress(
+            stage=4,
+            stage_name="Story Recap Analysis",
+            progress=42.0,
+            message="Analyzing drama plot & generating Khmer story recap (សង្ខេបរឿង)...",
+            log_level="INFO",
+            log_text="AI Storyteller analyzing full scene context, character conflict, and plot..."
+        )
+
+        import requests
+        import urllib.parse
+        proxies = get_configured_proxies(proxy_url)
+        req_proxies = proxies if proxies else None
+
+        key = gemini_api_key.strip() or os.environ.get("GEMINI_API_KEY", "").strip()
+
+        # Build complete transcript with timestamps
+        dialogue_transcript = "\n".join([
+            f"[{format_timestamp(s['start'])} -> {format_timestamp(s['end'])}] {s['text']}"
+            for s in segments if s.get("text", "").strip()
+        ])
+
+        if not dialogue_transcript:
+            dialogue_transcript = "No spoken dialogue. Visual cinematic scene."
+
+        system_prompt = (
+            "You are a master Cambodian movie recap narrator and storyteller (អ្នកនិពន្ធរឿងសង្ខេប / និទានរឿងភាពយន្ត).\n\n"
+            "Below is the complete transcript of character dialogues and timestamps from a drama clip:\n"
+            "--------------------\n"
+            f"{dialogue_transcript}\n"
+            "--------------------\n"
+            f"Total clip duration: {video_duration:.1f} seconds.\n\n"
+            "YOUR TASK:\n"
+            "1. Read and analyze the entire plot, characters, weapons, conflict, and drama taking place in this clip.\n"
+            "2. Write an exciting, thrilling MOVIE RECAP (សង្ខេបរឿង) narration script in natural, spoken Khmer (ភាសាខ្មែរ), "
+            "as heard on popular Cambodian movie review and storytelling channels.\n"
+            "3. Structure your narration into time-aligned blocks [START_SECONDS - END_SECONDS] that narrate the events "
+            f"progressively from 1.0s up to {max(2.0, video_duration - 1.0):.1f}s.\n"
+            "4. Each block should be between 6 to 14 seconds long with 1 to 2 seconds of breathing room between blocks.\n"
+            "5. Tone: Dramatic, engaging, vivid storytelling (e.g. 'នៅក្នុងឈុតនេះ...', 'ស្រាប់តែ...', 'តួប្រុសបាននិយាយថា...', 'ដោយសារតែ...').\n\n"
+            "OUTPUT FORMAT (STRICT):\n"
+            "Output ONLY the timecoded narration lines. No introductions, no English, no markdown formatting.\n"
+            "Format:\n"
+            "[START_SEC - END_SEC] Khmer narration text\n\n"
+            "Example:\n"
+            "[2.0 - 10.5] នៅក្នុងឈុតឆាកនេះ លោកម្ចាស់បានដកដាវដ៏កម្រមួយដើមចេញមក...\n"
+            "[12.0 - 22.0] ខណៈពេលនោះ សត្រូវក៏បាននិយាយឌឺដងថា ដាវនេះគឺជាដាវមួយជំនាន់..."
+        )
+
+        recap_text = ""
+
+        # Call AI with priority: OpenRouter / Gemini
+        is_openrouter = key.startswith("sk-or-")
+        is_groq = key.startswith("gsk_")
+        is_openai_style = is_openrouter or is_groq or (key.startswith("sk-") and not is_openrouter)
+
+        if is_openai_style:
+            if is_openrouter:
+                endpoint = "https://openrouter.ai/api/v1/chat/completions"
+                candidate_models = [
+                    "deepseek/deepseek-r1:free",
+                    "deepseek/deepseek-chat:free",
+                    "meta-llama/llama-3.3-70b-instruct:free",
+                    "qwen/qwen-2.5-72b-instruct:free",
+                    "google/gemini-2.0-flash-thinking-exp:free"
+                ]
+            elif is_groq:
+                endpoint = "https://api.groq.com/openai/v1/chat/completions"
+                candidate_models = ["llama-3.3-70b-versatile"]
+            else:
+                endpoint = "https://api.openai.com/v1/chat/completions"
+                candidate_models = ["gpt-4o-mini"]
+
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json"
+            }
+            if is_openrouter:
+                headers["HTTP-Referer"] = "https://github.com/KhmerDubStudio"
+                headers["X-Title"] = "KhmerDubStudio"
+
+            for model_name in candidate_models:
+                payload = {
+                    "model": model_name,
+                    "messages": [{"role": "user", "content": system_prompt}],
+                    "temperature": 0.4
+                }
+                try:
+                    resp = requests.post(endpoint, headers=headers, json=payload, proxies=req_proxies, timeout=45)
+                    if resp.status_code == 200:
+                        recap_text = resp.json()["choices"][0]["message"]["content"]
+                        if recap_text and contains_khmer(recap_text):
+                            break
+                    else:
+                        print(f"[Recap AI] Model {model_name} error: {resp.status_code}", file=sys.stderr)
+                except Exception as ex:
+                    print(f"[Recap AI] Model {model_name} error: {ex}", file=sys.stderr)
+
+        elif key.startswith("AIzaSy"):
+            payload = {
+                "contents": [{"parts": [{"text": system_prompt}]}],
+                "generationConfig": {"temperature": 0.35, "maxOutputTokens": 4096}
+            }
+            for model_id in ("gemini-2.0-flash", "gemini-1.5-flash"):
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={key}"
+                try:
+                    resp = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, proxies=req_proxies, timeout=35)
+                    if resp.status_code == 200:
+                        recap_text = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+                        if recap_text and contains_khmer(recap_text):
+                            break
+                except Exception as ex:
+                    print(f"[Recap Gemini] Error: {ex}", file=sys.stderr)
+
+        # Parse recap narration blocks
+        recap_segments = []
+        if recap_text:
+            raw_lines = recap_text.split("\n")
+            for line in raw_lines:
+                line = line.strip()
+                # Matches [START - END] Text or START - END: Text
+                m = re.match(r"^\[?(\d+(?:\.\d+)?)\s*[-–—]\s*(\d+(?:\.\d+)?)\s*\]?[\s.:\-]+(.+)$", line)
+                if m:
+                    try:
+                        s_start = float(m.group(1))
+                        s_end = float(m.group(2))
+                        s_text = clean_translated_text(m.group(3).strip())
+                        if s_text and contains_khmer(s_text):
+                            recap_segments.append({
+                                "id": len(recap_segments),
+                                "start": max(0.5, s_start),
+                                "end": min(video_duration, max(s_start + 1.0, s_end)),
+                                "text": s_text,
+                                "km_text": s_text
+                            })
+                    except Exception:
+                        continue
+
+        # If recap parsing succeeded with valid blocks, return them!
+        if recap_segments:
+            self._emit_progress(
+                stage=4,
+                stage_name="Story Recap Analysis",
+                progress=60.0,
+                message=f"Drama recap script created ({len(recap_segments)} storytelling scenes).",
+                log_level="SUCCESS",
+                log_text=f"Successfully generated {len(recap_segments)} Khmer movie recap (សង្ខេបរឿង) narration scenes."
+            )
+            # Log the story lines for the user in the execution terminal!
+            for s in recap_segments:
+                self._emit_progress(
+                    stage=4,
+                    stage_name="Story Recap Analysis",
+                    progress=60.0,
+                    message="Recap story narration prepared",
+                    log_level="TRANSLATE",
+                    log_text=f"[{format_timestamp(s['start'])} -> {format_timestamp(s['end'])}] និទាន: {s['km_text']}",
+                    khmer_text=s["km_text"]
+                )
+            return recap_segments
+
+        # Fallback to standard line translation if recap generation did not produce blocks
+        self._emit_progress(
+            stage=4,
+            stage_name="Translation",
+            progress=45.0,
+            message="Falling back to direct line dubbing...",
+            log_level="WARN",
+            log_text="Recap format unavailable; falling back to direct dialogue translation."
+        )
+        return self._stage_4_translate(segments, source_language, proxy_url, gemini_api_key)
+
+    def _stage_4_translate(self, segments: list, source_language: str = "auto", proxy_url: str = "", gemini_api_key: str = "") -> list:
+        """
+        Translates each dialogue segment to natural spoken Khmer (km).
+        Provider chain: Gemini AI (Movie Quality) -> Google -> MyMemory -> direct Google endpoint, with
+        per-provider failover so a temporary rate limit cannot silently leave
+        segments untranslated.
+        """
         self._emit_progress(
             stage=4,
             stage_name="Translation",
             progress=42.0,
             message="Initializing Khmer translator...",
             log_level="INFO",
-            log_text="Connecting to translation engine (Target: Khmer / km)..."
+            log_text=f"Connecting to translation engine (source={source_language}, target=Khmer/km)..."
         )
 
-        from deep_translator import GoogleTranslator
         import urllib.parse
         import requests
 
-        translator = GoogleTranslator(source='auto', target='km')
-        total = len(segments)
-        cache = {}
+        proxies = get_configured_proxies(proxy_url)
+        if proxies:
+            self._emit_progress(
+                stage=4,
+                stage_name="Translation",
+                progress=43.0,
+                message="Using network proxy for translation...",
+                log_level="INFO",
+                log_text=f"Translation routed through proxy: {proxies.get('http') or proxies.get('https')}"
+            )
 
-        def translate_text(text: str) -> str:
+        total = len(segments)
+
+        # Already Khmer: nothing to translate.
+        if source_language and source_language.lower() == "km":
+            for seg in segments:
+                seg["km_text"] = seg["text"]
+            self._emit_progress(
+                stage=4,
+                stage_name="Translation",
+                progress=60.0,
+                message="Source audio is already Khmer; translation skipped.",
+                log_level="SUCCESS",
+                log_text="Detected Khmer speech. Reusing original dialogue text."
+            )
+            return segments
+
+        cache = {}
+        counts = {"Gemini AI": 0, "Google": 0, "MyMemory": 0, "Google GTX": 0, "Ollama": 0}
+        untranslated = 0
+        google_disabled = False
+        ollama_model = os.environ.get("OLLAMA_MODEL", "qwen2.5:1.5b")
+
+        # -------------------------------------------------------------
+        # 1. AI Drama Batch Translation (Gemini / OpenRouter / Groq)
+        # -------------------------------------------------------------
+        if gemini_api_key and gemini_api_key.strip():
+            key = gemini_api_key.strip()
+            is_openrouter = key.startswith("sk-or-")
+            is_groq = key.startswith("gsk_")
+            is_openai_style = is_openrouter or is_groq or (key.startswith("sk-") and not is_openrouter)
+
+            engine_name = "OpenRouter (Gemini 2.0 Free)" if is_openrouter else ("Groq AI" if is_groq else "Gemini AI")
+            self._emit_progress(
+                stage=4,
+                stage_name="Translation",
+                progress=44.0,
+                message=f"Translating with {engine_name} (Movie Dubbing Quality)...",
+                log_level="INFO",
+                log_text=f"Connecting to {engine_name} with drama translation prompt."
+            )
+
+            batch_size = 15
+            req_proxies = proxies if proxies else None
+
+            for b_idx in range(0, total, batch_size):
+                if self._is_aborted:
+                    raise InterruptedError("Cancelled by user")
+
+                batch = segments[b_idx:b_idx + batch_size]
+                lines_text = "\n".join([f"[{s['id']}] {s['text']}" for s in batch if s['text'].strip()])
+                if not lines_text:
+                    continue
+
+                system_prompt = (
+                    "You are an expert Chinese drama dubbing translator specializing in translating "
+                    "Chinese dramas (historical, Xianxia, Wuxia, and romance) into natural, fluent spoken Khmer (ភាសាខ្មែរ).\n\n"
+                    "Task: Translate each dialogue line into authentic, natural Khmer dubbing speech.\n"
+                    "Rules:\n"
+                    "1. Use appropriate historical drama honorifics and respectful pronouns (e.g. 奴婢 -> ខ្ញុំម្ចាស់, 公子 -> អ្នកប្រុស/លោកម្ចាស់, 阁下 -> លោកម្ចាស់, 陛下 -> ព្រះអង្គ, 师傅 -> លោកគ្រូ).\n"
+                    "2. Translate idioms and martial arts terms naturally with their true meaning and emotional tone (e.g. 斩草除根 -> កម្ចាត់ស្មៅត្រូវរំលើងឫស).\n"
+                    "3. Keep lines concise for natural spoken lip-sync timing.\n"
+                    "4. Output format: Exactly one line per input with matching [ID], containing only the Khmer translation.\n"
+                    "Example:\n[0] ខ្ញុំម្ចាស់សូមដោះលែងលោកប្រុស...\n[1] ដាវស្វៀនហួន...\n\n"
+                    f"Dialogue lines:\n{lines_text}"
+                )
+
+                if is_openai_style:
+                    # OpenRouter / Groq / OpenAI compatible endpoint
+                    if is_openrouter:
+                        endpoint = "https://openrouter.ai/api/v1/chat/completions"
+                        candidate_models = [
+                            "deepseek/deepseek-r1:free",
+                            "deepseek/deepseek-chat:free",
+                            "meta-llama/llama-3.3-70b-instruct:free",
+                            "qwen/qwen-2.5-72b-instruct:free",
+                            "google/gemini-2.0-flash-thinking-exp:free"
+                        ]
+                    elif is_groq:
+                        endpoint = "https://api.groq.com/openai/v1/chat/completions"
+                        candidate_models = ["llama-3.3-70b-versatile"]
+                    else:
+                        endpoint = "https://api.openai.com/v1/chat/completions"
+                        candidate_models = ["gpt-4o-mini"]
+
+                    headers = {
+                        "Authorization": f"Bearer {key}",
+                        "Content-Type": "application/json"
+                    }
+                    if is_openrouter:
+                        headers["HTTP-Referer"] = "https://github.com/KhmerDubStudio"
+                        headers["X-Title"] = "KhmerDubStudio"
+
+                    for model_name in candidate_models:
+                        payload = {
+                            "model": model_name,
+                            "messages": [{"role": "user", "content": system_prompt}],
+                            "temperature": 0.25
+                        }
+                        try:
+                            resp = requests.post(endpoint, headers=headers, json=payload, proxies=req_proxies, timeout=30)
+                            if resp.status_code == 200:
+                                data = resp.json()
+                                raw_out = data["choices"][0]["message"]["content"]
+                                found_any = False
+                                for r_line in raw_out.split("\n"):
+                                    r_line = r_line.strip()
+                                    m = re.match(r"^\[?(\d+)\]?[\s.:\-]+(.+)$", r_line)
+                                    if m:
+                                        s_id = int(m.group(1))
+                                        km_t = clean_translated_text(m.group(2).strip())
+                                        if km_t and contains_khmer(km_t):
+                                            matched_seg = next((s for s in batch if s["id"] == s_id), None)
+                                            if matched_seg:
+                                                cache[matched_seg["text"].strip()] = (km_t, "AI Drama")
+                                                found_any = True
+                                if found_any:
+                                    break
+                            else:
+                                print(f"[{engine_name}] Model {model_name} returned {resp.status_code}, trying next...", file=sys.stderr)
+                        except Exception as ai_err:
+                            print(f"[{engine_name}] Connection error with {model_name}: {ai_err}", file=sys.stderr)
+                else:
+                    # Standard Google AI Studio endpoint
+                    payload = {
+                        "contents": [{"parts": [{"text": system_prompt}]}],
+                        "generationConfig": {"temperature": 0.25, "maxOutputTokens": 4096}
+                    }
+
+                    for model_id in ("gemini-2.0-flash", "gemini-1.5-flash"):
+                        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={key}"
+                        try:
+                            resp = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, proxies=req_proxies, timeout=25)
+                            if resp.status_code == 200:
+                                data = resp.json()
+                                raw_out = data["candidates"][0]["content"]["parts"][0]["text"]
+                                for r_line in raw_out.split("\n"):
+                                    r_line = r_line.strip()
+                                    m = re.match(r"^\[?(\d+)\]?[\s.:\-]+(.+)$", r_line)
+                                    if m:
+                                        s_id = int(m.group(1))
+                                        km_t = clean_translated_text(m.group(2).strip())
+                                        if km_t and contains_khmer(km_t):
+                                            matched_seg = next((s for s in batch if s["id"] == s_id), None)
+                                            if matched_seg:
+                                                cache[matched_seg["text"].strip()] = (km_t, "Gemini AI")
+                                break
+                            elif resp.status_code == 429:
+                                time.sleep(1.0)
+                        except Exception as g_err:
+                            print(f"[Gemini] {model_id} error: {g_err}", file=sys.stderr)
+
+        google = None
+        try:
+            from deep_translator import GoogleTranslator
+            google = GoogleTranslator(source="auto", target="km", proxies=proxies if proxies else None)
+        except Exception as e:
+            print(f"[Translation] GoogleTranslator unavailable: {e}", file=sys.stderr)
+
+        mymemory = None
+        mymemory_src = mymemory_language_code(source_language)
+        try:
+            from deep_translator import MyMemoryTranslator
+            if mymemory_src:
+                mymemory = MyMemoryTranslator(source=mymemory_src, target="km-KH", proxies=proxies if proxies else None)
+        except Exception as e:
+            print(f"[Translation] MyMemoryTranslator unavailable: {e}", file=sys.stderr)
+
+        def google_direct(text: str) -> str:
+            req_proxies = proxies if proxies else None
+            for domain in ("translate.googleapis.com", "translate.google.com"):
+                try:
+                    url = f"https://{domain}/translate_a/single?client=gtx&sl=auto&tl=km&dt=t&q=" + urllib.parse.quote(text)
+                    resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, proxies=req_proxies, timeout=12)
+                    if resp.status_code == 429:
+                        raise RuntimeError("Google rate limit (HTTP 429)")
+                    if resp.status_code == 200:
+                        payload = resp.json()
+                        result = "".join(part[0] for part in payload[0] if part and part[0])
+                        if result and result.strip() and contains_khmer(result):
+                            return result.strip()
+                except RuntimeError:
+                    raise
+                except Exception:
+                    continue
+            return ""
+
+        def mymemory_direct(text: str) -> str:
+            langpair = urllib.parse.quote(f"{mymemory_src}|km-KH")
+            url = (
+                "https://api.mymemory.translated.net/get?q="
+                + urllib.parse.quote(text)
+                + f"&langpair={langpair}"
+            )
+            req_proxies = proxies if proxies else None
+            resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, proxies=req_proxies, timeout=15)
+            resp.raise_for_status()
+            payload = resp.json()
+            status = payload.get("responseStatus")
+            if str(status) != "200":
+                raise RuntimeError(payload.get("responseDetails") or f"MyMemory error {status}")
+            return (payload.get("responseData") or {}).get("translatedText") or ""
+
+        def ollama_direct(text: str) -> str:
+            prompt = (
+                "Translate this Chinese text into natural, spoken Khmer (Cambodian). "
+                "Output ONLY the Khmer translation, with no pinyin, no quotes, no explanations.\n\n"
+                f"Chinese: {text}"
+            )
+            resp = requests.post(
+                "http://localhost:11434/api/generate",
+                json={"model": ollama_model, "prompt": prompt, "stream": False},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            return (resp.json() or {}).get("response") or ""
+
+        def translate_text(text: str):
+            """Returns (khmer_text, provider_name_or_None)."""
+            nonlocal google_disabled
             clean = text.strip()
             if not clean:
-                return ""
+                return "", None
             if clean in cache:
                 return cache[clean]
 
-            # 1. Try deep-translator
+            # 1. Google via deep-translator
+            if google and not google_disabled:
+                try:
+                    out = clean_translated_text(google.translate(clean))
+                    if out and contains_khmer(out):
+                        cache[clean] = (out, "Google")
+                        return cache[clean]
+                except Exception as e:
+                    if "429" in str(e) or "TooManyRequests" in type(e).__name__:
+                        google_disabled = True
+                        print("[Translation] Google rate limited; switching to MyMemory.", file=sys.stderr)
+
+            # 2. MyMemory (library, then direct API)
+            if mymemory_src:
+                for attempt in range(2):
+                    try:
+                        if mymemory and attempt == 0:
+                            out = mymemory.translate(clean)
+                        else:
+                            out = mymemory_direct(clean)
+                        out = clean_translated_text(out)
+                        if out and contains_khmer(out):
+                            cache[clean] = (out, "MyMemory")
+                            return cache[clean]
+                    except Exception:
+                        time.sleep(0.6)
+
+            # 3. Direct Google endpoint as a last resort
             try:
-                translated = translator.translate(clean)
-                if translated and translated.strip():
-                    res = translated.strip()
-                    cache[clean] = res
-                    return res
+                out = clean_translated_text(google_direct(clean))
+                if out:
+                    cache[clean] = (out, "Google GTX")
+                    return cache[clean]
             except Exception:
                 pass
 
-            # 2. Resilient fallback to direct Google GTX endpoint
+            # 4. Local Ollama model - final fallback, used only when every network
+            # translator above has failed (e.g. fully offline). Quality is not
+            # guaranteed for Khmer with small local models.
             try:
-                url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=km&dt=t&q=" + urllib.parse.quote(clean)
-                resp = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10).json()
-                translated = "".join([part[0] for part in resp[0] if part[0]])
-                if translated and translated.strip():
-                    res = translated.strip()
-                    cache[clean] = res
-                    return res
+                out = clean_translated_text(ollama_direct(clean))
+                if out and contains_khmer(out):
+                    cache[clean] = (out, "Ollama")
+                    return cache[clean]
             except Exception:
                 pass
 
-            return clean  # Return original if all providers unavailable
+            return clean, None
 
         for idx, seg in enumerate(segments):
             if self._is_aborted:
                 raise InterruptedError("Cancelled by user")
 
             original_text = seg["text"]
-            khmer_text = translate_text(original_text)
+            khmer_text, provider = translate_text(original_text)
             seg["km_text"] = khmer_text
+
+            if provider:
+                counts[provider] += 1
+            else:
+                untranslated += 1
 
             pct = 42.0 + ((idx + 1) / total) * 18.0  # Spans 42% - 60%
             time_tag = f"[{format_timestamp(seg['start'])} -> {format_timestamp(seg['end'])}]"
@@ -818,27 +1369,44 @@ class DubbingAPI:
                 stage_name="Translation",
                 progress=pct,
                 message=f"Translated {idx+1}/{total} dialogue lines to Khmer...",
-                log_level="TRANSLATE",
-                log_text=f"{time_tag} Original: {original_text}",
-                khmer_text=khmer_text
+                log_level="TRANSLATE" if provider else "WARN",
+                log_text=f"{time_tag} [{provider or 'UNTRANSLATED'}] Original: {original_text}",
+                khmer_text=khmer_text if provider else None
             )
-            time.sleep(0.04)
+            # Be gentle with public endpoints to avoid rate limiting.
+            time.sleep(0.5 if provider == "MyMemory" else 0.7)
 
-        self._emit_progress(
-            stage=4,
-            stage_name="Translation",
-            progress=60.0,
-            message=f"Khmer translation completed ({total} segments).",
-            log_level="SUCCESS",
-            log_text="All dialogue segments successfully translated into natural Khmer script."
-        )
+        summary = ", ".join(f"{name}: {count}" for name, count in counts.items() if count)
+        if untranslated:
+            self._emit_progress(
+                stage=4,
+                stage_name="Translation",
+                progress=60.0,
+                message=f"Translation finished with {untranslated}/{total} untranslated segments.",
+                log_level="WARN",
+                log_text=(
+                    f"Could not translate {untranslated}/{total} segments "
+                    f"({summary or 'no provider succeeded'}). Those segments will be skipped in the voiceover."
+                )
+            )
+        else:
+            self._emit_progress(
+                stage=4,
+                stage_name="Translation",
+                progress=60.0,
+                message=f"Khmer translation completed ({total} segments).",
+                log_level="SUCCESS",
+                log_text=f"All {total} dialogue segments translated to Khmer ({summary})."
+            )
         return segments
 
     def _stage_5_synthesize_voiceover(self, segments: list, voice: str, rate: str,
-                                      total_duration: float, stem_dir: str) -> str:
+                                      total_duration: float, stem_dir: str, proxy_url: str = "",
+                                      audio_delay_ms: float = 250.0) -> str:
         """
         Synthesizes Khmer speech for each segment using edge-tts,
         then aligns all segments into a time-synchronized full-length PCM audio track.
+        Includes audio_delay_ms offset for smooth lip-sync and subtitle alignment.
         """
         self._emit_progress(
             stage=5,
@@ -846,7 +1414,7 @@ class DubbingAPI:
             progress=62.0,
             message=f"Synthesizing neural voiceover ({voice})...",
             log_level="INFO",
-            log_text=f"Connecting to Microsoft Edge TTS with voice: {voice} (rate={rate})..."
+            log_text=f"Connecting to Microsoft Edge TTS with voice: {voice} (rate={rate}, delay=+{audio_delay_ms:.0f}ms)..."
         )
 
         import edge_tts
@@ -854,11 +1422,15 @@ class DubbingAPI:
         if np is None:
             import numpy as np
 
+        proxies = get_configured_proxies(proxy_url)
+        edge_proxy = (proxies.get("https") or proxies.get("http")) if proxies else None
+
         tts_dir = os.path.join(stem_dir, "tts_chunks")
         os.makedirs(tts_dir, exist_ok=True)
 
         sample_rate = 48000
-        total_samples = max(int(total_duration * sample_rate) + (sample_rate * 2), sample_rate * 5)
+        audio_delay_sec = max(0.0, float(audio_delay_ms) / 1000.0)
+        total_samples = max(int((total_duration + audio_delay_sec) * sample_rate) + (sample_rate * 2), sample_rate * 5)
         # Create blank 2-channel 16-bit PCM master track
         master_audio = np.zeros((total_samples, 2), dtype=np.int16)
 
@@ -872,41 +1444,73 @@ class DubbingAPI:
             if not km_text:
                 continue
 
+            # Never feed non-Khmer text to a Khmer neural voice: edge-tts returns
+            # "NoAudioReceived" and the segment would be silently dropped.
+            if not contains_khmer(km_text):
+                self._emit_progress(
+                    stage=5,
+                    stage_name="Voiceover Synthesis",
+                    progress=62.0 + ((idx + 1) / max(1, total_segs)) * 22.0,
+                    message=f"Skipped segment {idx+1}: translation unavailable.",
+                    log_level="WARN",
+                    log_text=f"Segment {idx+1} has no Khmer text; skipping TTS: '{km_text[:30]}...'"
+                )
+                continue
+
             mp3_path = os.path.join(tts_dir, f"seg_{idx:04d}.mp3")
             wav_path = os.path.join(tts_dir, f"seg_{idx:04d}.wav")
 
             # Asynchronously synthesize mp3 via edge-tts with automatic retry
             async def _synthesize():
-                communicate = edge_tts.Communicate(km_text, voice=voice, rate=rate)
+                communicate = edge_tts.Communicate(km_text, voice=voice, rate=rate, proxy=edge_proxy)
                 await communicate.save(mp3_path)
 
             success = False
+            last_error = None
             for attempt in range(3):
                 try:
                     asyncio.run(_synthesize())
                     if os.path.isfile(mp3_path) and os.path.getsize(mp3_path) > 0:
                         success = True
                         break
-                except Exception:
+                except Exception as e:
+                    last_error = e
                     time.sleep(0.5)
 
             pct = 62.0 + ((idx + 1) / total_segs) * 22.0  # Spans 62% - 84%
 
             if not success:
+                error_detail = f" ({type(last_error).__name__}: {last_error})" if last_error else ""
                 self._emit_progress(
                     stage=5,
                     stage_name="Voiceover Synthesis",
                     progress=pct,
                     message=f"Warning: TTS skipped segment {idx+1}",
                     log_level="WARN",
-                    log_text=f"TTS synthesis temporarily unavailable for: '{km_text[:30]}...'"
+                    log_text=f"TTS failed for '{km_text[:30]}...'{error_detail}"
                 )
                 continue
 
-            # Convert segment mp3 to 48kHz stereo WAV using ffmpeg
+            # Calculate duration matching: stretch or compress Khmer TTS audio to match the original actor's speech duration
+            target_dur = max(0.5, float(seg.get("end", 0.0)) - float(seg.get("start", 0.0)))
+            tts_dur = get_media_duration(mp3_path, self._ffmpeg_path)
+
+            filter_args = []
+            if tts_dur > 0:
+                speed_ratio = tts_dur / target_dur
+                # Clamp to natural human speech bounds (0.85x to 1.35x) so audio sounds completely natural
+                if speed_ratio > 1.08:
+                    atempo = min(1.35, speed_ratio)
+                    filter_args = ["-filter:a", f"atempo={atempo:.3f}"]
+                elif speed_ratio < 0.92:
+                    atempo = max(0.88, speed_ratio)
+                    filter_args = ["-filter:a", f"atempo={atempo:.3f}"]
+
+            # Convert segment mp3 to 48kHz stereo WAV with dynamic duration matching
             convert_cmd = [
                 self._ffmpeg_path, "-y",
                 "-i", mp3_path,
+                *filter_args,
                 "-ar", str(sample_rate),
                 "-ac", "2",
                 "-acodec", "pcm_s16le",
@@ -921,7 +1525,7 @@ class DubbingAPI:
                 seg_samples = np.frombuffer(raw_bytes, dtype=np.int16).reshape(-1, 2)
 
             # Ensure master_audio has enough capacity for this segment
-            start_sample = int(seg["start"] * sample_rate)
+            start_sample = max(0, int((seg["start"] + audio_delay_sec) * sample_rate))
             end_sample = start_sample + len(seg_samples)
             if end_sample > len(master_audio):
                 extension = np.zeros((end_sample - len(master_audio) + sample_rate, 2), dtype=np.int16)
@@ -981,6 +1585,32 @@ class DubbingAPI:
         output_filename = f"{safe_title}_KhmerDub_{voice_short}_{int(time.time())}.mp4"
         final_output_path = os.path.join(OUTPUT_DIR, output_filename)
 
+        # Probe the source video codec. Widely-playable codecs (H.264/HEVC) can be
+        # stream-copied for speed; anything else (e.g. AV1, which QuickTime and many
+        # other players can't decode) must be transcoded to H.264 or the exported
+        # file will open with a black/unplayable video track.
+        probe = subprocess.run(
+            [self._ffmpeg_path, "-i", source_video_path],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+        codec_match = re.search(r"Video:\s*([a-zA-Z0-9_]+)", probe.stderr or "")
+        source_codec = codec_match.group(1).lower() if codec_match else ""
+
+        if source_codec in ("h264", "avc", "avc1"):
+            video_codec_args = ["-c:v", "copy"]
+        elif source_codec in ("hevc", "h265"):
+            video_codec_args = ["-c:v", "copy", "-tag:v", "hvc1"]
+        else:
+            video_codec_args = ["-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-pix_fmt", "yuv420p"]
+            self._emit_progress(
+                stage=6,
+                stage_name="Audio-Video Remux",
+                progress=88.0,
+                message="Transcoding video for playback compatibility...",
+                log_level="INFO",
+                log_text=f"Source video codec '{source_codec or 'unknown'}' is not widely supported on Mac/QuickTime; re-encoding to standard H.264."
+            )
+
         if remux_mode == "duck":
             # Studio ducking: keep 15% original audio under full Khmer voice
             cmd = [
@@ -991,9 +1621,10 @@ class DubbingAPI:
                 "[0:a]volume=0.15[bg];[1:a]volume=1.0[voice];[bg][voice]amix=inputs=2:duration=first[aout]",
                 "-map", "0:v",
                 "-map", "[aout]",
-                "-c:v", "copy",
+                *video_codec_args,
                 "-c:a", "aac",
                 "-b:a", "192k",
+                "-movflags", "+faststart",
                 "-shortest",
                 final_output_path
             ]
@@ -1005,9 +1636,10 @@ class DubbingAPI:
                 "-i", voiceover_wav,
                 "-map", "0:v:0",
                 "-map", "1:a:0",
-                "-c:v", "copy",
+                *video_codec_args,
                 "-c:a", "aac",
                 "-b:a", "192k",
+                "-movflags", "+faststart",
                 "-shortest",
                 final_output_path
             ]
@@ -1029,7 +1661,7 @@ class DubbingAPI:
                 "-i", voiceover_wav,
                 "-map", "0:v:0",
                 "-map", "1:a:0",
-                "-c:v", "copy",
+                *video_codec_args,
                 "-c:a", "aac",
                 "-b:a", "192k",
                 "-shortest",
@@ -1060,6 +1692,22 @@ def main():
         run_server()
         return
 
+    # Single-instance lock: prevents multiple stacked windows from opening
+    global _app_lock_file
+    try:
+        import tempfile
+        lock_path = os.path.join(tempfile.gettempdir(), "khmerdubstudio_instance.lock")
+        _app_lock_file = open(lock_path, "a+")
+        if sys.platform != "win32":
+            import fcntl
+            fcntl.flock(_app_lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        else:
+            import msvcrt
+            msvcrt.locking(_app_lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+    except Exception:
+        print("[INFO] Another instance of KhmerDubStudio is already running. Exiting duplicate.")
+        sys.exit(0)
+
     html_path = os.path.join(WEB_DIR, "index.html")
     if not os.path.isfile(html_path):
         print(f"Error: Frontend file not found at {html_path}", file=sys.stderr)
@@ -1087,7 +1735,12 @@ def main():
     )
 
     api._set_window(window)
+    def _on_close():
+        os._exit(0)
+    window.events.closing += _on_close
+    window.events.closed += _on_close
     webview.start(debug=False)
+    os._exit(0)
 
 
 if __name__ == "__main__":

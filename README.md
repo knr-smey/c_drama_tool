@@ -38,7 +38,7 @@ It runs three ways:
 1. **Media Ingestion**: Uses `yt-dlp` to fetch high-resolution MP4 video and audio streams (or consumes local video files directly).
 2. **Audio Extraction**: Converts audio to 16kHz mono uncompressed PCM WAV via `ffmpeg` for optimal speech recognition.
 3. **Speech-to-Text**: Runs `faster-whisper` (`base` / `small` / `medium` with `int8` quantization) to extract timestamped dialogue segments.
-4. **Translation**: Translates dialogue segments into Khmer (`km`) via `deep-translator`, with a direct Google endpoint fallback.
+4. **Translation**: Translates dialogue segments into Khmer (`km`) via `deep-translator`, with automatic provider failover (Google → MyMemory → Google direct endpoint). If Google rate-limits the machine (HTTP 429), MyMemory is used instead, and the log shows which provider translated each line.
 5. **Voiceover Synthesis**: Synthesizes neural Khmer speech using `edge-tts`:
    - `km-KH-PisethNeural` (Male — crisp, authoritative narration)
    - `km-KH-SreymomNeural` (Female — warm, melodious storytelling)
@@ -174,6 +174,16 @@ c_drama_tool/
 - **Bi-Directional Bridge (desktop)**: Python pushes updates via `window.evaluate_js()` using the structured event system (`onEngineUpdate`, `onJobComplete`, `onJobError`).
 - **HTTP Bridge (Docker/browser)**: The same events stream to the browser through `/api/events` (Server-Sent Events).
 - **Graceful Diagnostics**: Subprocess failures (e.g. invalid URL, corrupt audio) emit exact stderr to the console and re-enable controls.
+
+---
+
+## 🩺 Troubleshooting
+
+- **Logs show Chinese/original text as "Khmer"**: Google Translate was rate-limited (HTTP 429). The app now automatically falls back to MyMemory, and labels each line with the provider (`[Google]`, `[MyMemory]`, `[Google GTX]`). If all providers fail, those segments are marked `UNTRANSLATED` and skipped in the voiceover instead of producing silent TTS failures.
+- **`TTS failed ... NoAudioReceived`**: the Khmer neural voice cannot speak non-Khmer text. This now only happens if the text is genuinely not Khmer; re-run once translation succeeds.
+- **Chinese transcription is inaccurate**: use the `small` model instead of `base` (better accuracy, slower).
+- **Output video is silent**: it was produced by an older run where translation/TTS failed. Regenerate it after updating.
+- **Google keeps returning 429**: wait a while (the limit is temporary) or use a different network; MyMemory is used in the meantime.
 
 ---
 

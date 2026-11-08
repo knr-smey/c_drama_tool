@@ -50,7 +50,15 @@ api._set_event_sink(_event_sink)
 
 @app.get("/")
 def index():
-    return send_from_directory(WEB_DIR, "index.html")
+    with open(os.path.join(WEB_DIR, "index.html"), "r", encoding="utf-8") as fh:
+        html = fh.read()
+    # Mark the page as server mode so the UI uses HTTP instead of the pywebview bridge.
+    marker = "<script>window.__KHMERDUB_SERVER_MODE__ = true;</script>"
+    if "</head>" in html:
+        html = html.replace("</head>", marker + "\n</head>", 1)
+    else:
+        html = marker + html
+    return Response(html, mimetype="text/html")
 
 
 @app.get("/api/health")
@@ -132,6 +140,8 @@ def download(filename):
 @app.get("/api/events")
 def events():
     def stream():
+        # Flush headers immediately so the browser opens the EventSource stream.
+        yield ": connected\n\n"
         while True:
             try:
                 event_name, data = _event_queue.get(timeout=20)
