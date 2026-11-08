@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 KhmerDubStudio - AI Video Dubbing Desktop Application
-A complete Windows desktop application using pywebview, Tailwind CSS, and AI libraries.
+A cross-platform desktop (Windows / macOS / Linux) application built with pywebview,
+Tailwind CSS, and AI libraries. It can also run headless as a browser-based web app
+(used by the Docker image) via `python app.py --web` or `python server.py`.
 
 Pipeline Stages:
 1. Media Ingestion: Download MP4 video and audio stream using yt-dlp (or handle local file).
@@ -97,19 +99,30 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 os.makedirs(STEMS_DIR, exist_ok=True)
 
 
+def _ffmpeg_binary_name() -> str:
+    return "ffmpeg.exe" if sys.platform == "win32" else "ffmpeg"
+
+
+def _ffprobe_binary_name() -> str:
+    return "ffprobe.exe" if sys.platform == "win32" else "ffprobe"
+
+
 def resolve_ffmpeg_path() -> str:
     """
-    Locates the ffmpeg executable on Windows:
+    Locates the ffmpeg executable on Windows, macOS, and Linux:
     1. Checks system PATH
     2. Checks imageio_ffmpeg bundled binary
     3. Checks local project bin directory
-    4. Checks standard Windows installation paths
+    4. Checks standard platform installation paths (Homebrew, apt, Chocolatey, WinGet)
     """
+    binary_name = _ffmpeg_binary_name()
+
     # 1. Check system PATH
-    ffmpeg_exe = shutil.which("ffmpeg") or shutil.which("ffmpeg.exe")
-    if ffmpeg_exe and os.path.isfile(ffmpeg_exe):
-        _ensure_in_path(os.path.dirname(ffmpeg_exe))
-        return os.path.abspath(ffmpeg_exe)
+    for candidate in ("ffmpeg", "ffmpeg.exe"):
+        ffmpeg_exe = shutil.which(candidate)
+        if ffmpeg_exe and os.path.isfile(ffmpeg_exe):
+            _ensure_in_path(os.path.dirname(ffmpeg_exe))
+            return os.path.abspath(ffmpeg_exe)
 
     # 2. Check imageio_ffmpeg if installed
     try:
@@ -117,10 +130,11 @@ def resolve_ffmpeg_path() -> str:
         exe = imageio_ffmpeg.get_ffmpeg_exe()
         if exe and os.path.isfile(exe):
             bin_dir = os.path.dirname(exe)
-            standard_ffmpeg = os.path.join(bin_dir, "ffmpeg.exe")
+            standard_ffmpeg = os.path.join(bin_dir, binary_name)
             if not os.path.isfile(standard_ffmpeg):
                 try:
                     shutil.copy2(exe, standard_ffmpeg)
+                    os.chmod(standard_ffmpeg, 0o755)
                 except Exception:
                     pass
             _ensure_in_path(bin_dir)
@@ -128,18 +142,27 @@ def resolve_ffmpeg_path() -> str:
     except Exception:
         pass
 
-    # 3. Check local ./bin/ffmpeg.exe
-    local_bin = os.path.join(APP_ROOT, "bin", "ffmpeg.exe")
+    # 3. Check local ./bin/ffmpeg(.exe)
+    local_bin = os.path.join(APP_ROOT, "bin", binary_name)
     if os.path.isfile(local_bin):
         _ensure_in_path(os.path.dirname(local_bin))
         return local_bin
 
-    # 4. Check common Windows install locations
+    # 4. Check common platform install locations
     common_locations = [
+        # Windows
         r"C:\ffmpeg\bin\ffmpeg.exe",
         r"C:\Program Files\ffmpeg\bin\ffmpeg.exe",
         r"C:\ProgramData\chocolatey\bin\ffmpeg.exe",
         os.path.expanduser(r"~\AppData\Local\Microsoft\WinGet\Links\ffmpeg.exe"),
+        # macOS (Homebrew Apple Silicon / Intel, MacPorts)
+        "/opt/homebrew/bin/ffmpeg",
+        "/usr/local/bin/ffmpeg",
+        "/opt/local/bin/ffmpeg",
+        # Linux
+        "/usr/bin/ffmpeg",
+        "/usr/local/bin/ffmpeg",
+        "/snap/bin/ffmpeg",
     ]
     for loc in common_locations:
         if os.path.isfile(loc):
@@ -147,6 +170,40 @@ def resolve_ffmpeg_path() -> str:
             return loc
 
     return "ffmpeg"
+
+
+def resolve_ffprobe_path(ffmpeg_exe: str = None) -> str:
+    """Locates ffprobe on PATH, next to ffmpeg, or in common platform locations."""
+    for candidate in ("ffprobe", "ffprobe.exe"):
+        probe = shutil.which(candidate)
+        if probe and os.path.isfile(probe):
+            return os.path.abspath(probe)
+
+    search_dirs = []
+    if ffmpeg_exe:
+        search_dirs.append(os.path.dirname(ffmpeg_exe))
+    try:
+        import imageio_ffmpeg
+        search_dirs.append(os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe()))
+    except Exception:
+        pass
+
+    for directory in search_dirs:
+        candidate = os.path.join(directory, _ffprobe_binary_name())
+        if os.path.isfile(candidate):
+            return candidate
+
+    for loc in (
+        "/opt/homebrew/bin/ffprobe",
+        "/usr/local/bin/ffprobe",
+        "/usr/bin/ffprobe",
+        "/snap/bin/ffprobe",
+        r"C:\ffmpeg\bin\ffprobe.exe",
+    ):
+        if os.path.isfile(loc):
+            return loc
+
+    return "ffprobe"
 
 
 def _ensure_in_path(directory: str):
@@ -175,14 +232,9 @@ def sanitize_filename(name: str) -> str:
 
 def get_media_duration(file_path: str, ffmpeg_exe: str) -> float:
     """Determines media duration using ffprobe or ffmpeg metadata parse."""
-    ffprobe_exe = shutil.which("ffprobe") or shutil.which("ffprobe.exe")
-    if not ffprobe_exe:
-        ffmpeg_dir = os.path.dirname(ffmpeg_exe)
-        candidate = os.path.join(ffmpeg_dir, "ffprobe.exe")
-        if os.path.isfile(candidate):
-            ffprobe_exe = candidate
+    ffprobe_exe = resolve_ffprobe_path(ffmpeg_exe)
 
-    if ffprobe_exe and os.path.isfile(ffprobe_exe):
+    if ffprobe_exe and (os.path.isfile(ffprobe_exe) or shutil.which(ffprobe_exe)):
         try:
             cmd = [
                 ffprobe_exe, "-v", "error",
@@ -219,12 +271,22 @@ class DubbingAPI:
         self._is_aborted = False
         self._pipeline_thread = None
         self._ffmpeg_path = resolve_ffmpeg_path()
+        # Optional callback(event_name, data) for non-pywebview hosts (web server mode)
+        self._event_sink = None
 
     def _set_window(self, window):
         self._window = window
 
+    def _set_event_sink(self, sink):
+        self._event_sink = sink
+
     def _broadcast(self, event_name: str, data: dict):
-        """Dispatches structured events to the webview UI via window.evaluate_js"""
+        """Dispatches structured events to the webview UI and/or an external sink."""
+        if self._event_sink:
+            try:
+                self._event_sink(event_name, data)
+            except Exception as e:
+                print(f"[Event Sink Error] {e}", file=sys.stderr)
         if not self._window:
             return
         try:
@@ -324,12 +386,14 @@ class DubbingAPI:
             return {"error": str(e)}
 
     def open_video(self, file_path: str) -> dict:
-        """Opens the exported video file in default media player."""
+        """Opens the exported video file in the platform default media player."""
         if not file_path or not os.path.isfile(file_path):
             return {"error": "File does not exist"}
         try:
             if sys.platform == "win32":
                 os.startfile(file_path)
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", file_path])
             else:
                 subprocess.Popen(["xdg-open", file_path])
             return {"success": True}
@@ -337,12 +401,14 @@ class DubbingAPI:
             return {"error": str(e)}
 
     def reveal_in_folder(self, file_path: str) -> dict:
-        """Selects the exported file inside Windows File Explorer."""
+        """Reveals the exported file in the platform file manager."""
         if not file_path or not os.path.isfile(file_path):
             return self.open_output_folder()
         try:
             if sys.platform == "win32":
                 subprocess.Popen(f'explorer /select,"{os.path.abspath(file_path)}"')
+            elif sys.platform == "darwin":
+                subprocess.Popen(["open", "-R", os.path.abspath(file_path)])
             else:
                 self.open_output_folder(os.path.dirname(file_path))
             return {"success": True}
@@ -988,10 +1054,24 @@ class DubbingAPI:
 
 
 def main():
-    """Application entrypoint."""
+    """Application entrypoint (desktop GUI by default, browser server with --web)."""
+    if "--web" in sys.argv or os.environ.get("KHMERDUB_MODE", "").lower() == "web":
+        from server import run_server
+        run_server()
+        return
+
     html_path = os.path.join(WEB_DIR, "index.html")
     if not os.path.isfile(html_path):
         print(f"Error: Frontend file not found at {html_path}", file=sys.stderr)
+        sys.exit(1)
+
+    if webview is None:
+        print(
+            "Error: pywebview is not installed. Install desktop dependencies with "
+            "`pip install -r requirements-desktop.txt`, or run browser mode with "
+            "`python app.py --web`.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     api = DubbingAPI()

@@ -1,0 +1,6 @@
+# Desktop (Windows / macOS / Linux) dependencies.
+# Installs the core pipeline plus pywebview for the native window.
+-r requirements.txt
+
+# Core Desktop GUI (native window)
+pywebview>=5.0.0

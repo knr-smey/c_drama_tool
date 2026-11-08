@@ -14,7 +14,7 @@ if errorlevel 1 (
 )
 
 echo [1/2] Verifying and installing dependencies...
-python -m pip install -r requirements.txt
+python -m pip install -r requirements-desktop.txt
 
 echo.
 echo [2/2] Launching KhmerDubStudio Desktop Application...
