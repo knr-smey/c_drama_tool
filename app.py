@@ -1731,7 +1731,7 @@ def main():
         width=1280,
         height=840,
         min_size=(1080, 700),
-        background_color="#020617"
+        background_color="#09090b"
     )
 
     api._set_window(window)

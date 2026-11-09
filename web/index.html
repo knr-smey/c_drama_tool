@@ -13,133 +13,146 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              50: '#f0f9ff',
-              100: '#e0f2fe',
-              400: '#38bdf8',
-              500: '#0ea5e9',
-              600: '#0284c7',
-            },
-            khmer: {
-              primary: '#0ea5e9',
-              accent: '#10b981'
+            editor: {
+              black: '#000000',
+              bg: '#09090b',
+              panel: '#111113',
+              card: '#18181b',
+              input: '#0c0c0e',
+              border: '#27272a',
+              borderHover: '#3f3f46',
+              orange: '#ff6b00',
+              orangeHover: '#ff7d1a',
+              orangeDim: '#ff6b0018',
+              orangeGlow: 'rgba(255, 107, 0, 0.25)'
             }
           },
           fontFamily: {
-            sans: ['Inter', 'Kantumruy Pro', 'system-ui', 'sans-serif'],
-            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+            sans: ['Inter', 'Kantumruy Pro', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'SF Mono', 'Menlo', 'monospace']
           }
         }
       }
     }
   </script>
 
-  <!-- Google Fonts: Inter & Kantumruy Pro (Khmer) -->
+  <!-- Google Fonts: Inter & Kantumruy Pro (Khmer) & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kantumruy+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Kantumruy+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    /* Custom scrollbars */
+    /* Sleek Editor Scrollbars */
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
     }
     ::-webkit-scrollbar-track {
-      background: #090d16;
+      background: #09090b;
     }
     ::-webkit-scrollbar-thumb {
-      background: #1e293b;
-      border-radius: 9999px;
+      background: #27272a;
+      border-radius: 4px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #334155;
+      background: #ff6b00;
     }
 
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.15); opacity: 0.3; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-    .pulse-ring {
-      animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    /* Custom Selection */
+    ::selection {
+      background: #ff6b00;
+      color: #000000;
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased h-screen flex flex-col overflow-hidden select-none">
+<body class="bg-editor-black text-white font-sans antialiased h-screen flex flex-col overflow-hidden select-none">
 
-  <!-- Top App Navigation Bar -->
-  <header class="h-14 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md px-5 flex items-center justify-between shrink-0 z-20">
+  <!-- ========================================== -->
+  <!-- TOP APP BAR: Studio Editor Header         -->
+  <!-- ========================================== -->
+  <header class="h-13 bg-editor-panel border-b border-editor-border px-5 flex items-center justify-between shrink-0 z-20">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-500 via-indigo-500 to-emerald-400 p-[1.5px] shadow-lg shadow-sky-500/20">
-        <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-          <i data-lucide="mic" class="w-4 h-4 text-sky-400"></i>
-        </div>
+      <!-- Minimalist Studio Orange Emblem -->
+      <div class="w-8 h-8 rounded-lg bg-editor-orange flex items-center justify-center shadow-md shadow-orange-500/20 text-black">
+        <i data-lucide="scissors" class="w-4 h-4 text-black stroke-[2.5]"></i>
       </div>
       <div>
         <div class="flex items-center gap-2">
-          <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-1.5">
-            KhmerDub<span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-emerald-400 font-extrabold">Studio</span>
+          <h1 class="text-sm font-bold tracking-tight text-white flex items-center gap-1">
+            KhmerDub<span class="text-editor-orange font-extrabold">Studio</span>
           </h1>
-          <span class="px-2 py-0.5 text-[10px] font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/30 rounded-full">v1.0 Pro</span>
-          <span id="platform-badge" class="px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full">Desktop</span>
+          <span class="px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-zinc-900 text-zinc-400 border border-editor-border rounded">v1.0</span>
+          <span id="platform-badge" class="px-1.5 py-0.5 text-[10px] font-mono font-semibold bg-zinc-900 text-editor-orange border border-editor-orange/30 rounded">macOS</span>
         </div>
       </div>
     </div>
 
-    <!-- Center System Status indicator -->
-    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/60 border border-slate-700/50 text-xs">
-      <span id="system-status-dot" class="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
-      <span id="system-status-text" class="text-slate-300 font-medium">Ready</span>
-      <span class="text-slate-600">|</span>
-      <span class="text-slate-400 text-[11px]" id="engine-info">Whisper + Edge TTS (km-KH)</span>
+    <!-- Center Status Indicator (Minimalist) -->
+    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/80 border border-editor-border text-xs">
+      <span id="system-status-dot" class="w-2 h-2 rounded-full bg-white shadow-sm shadow-white/50"></span>
+      <span id="system-status-text" class="text-zinc-200 font-medium">Ready</span>
+      <span class="text-zinc-700">|</span>
+      <span class="text-zinc-400 text-[11px]" id="engine-info">Whisper + Edge TTS (km-KH)</span>
     </div>
 
     <!-- Right Header Actions -->
     <div class="flex items-center gap-2">
-      <button onclick="handleOpenOutputDir()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700/80 border border-slate-700/60 rounded-lg transition-all" title="Open Output Folder">
-        <i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i>
+      <button 
+        onclick="handleOpenOutputDir()" 
+        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-editor-border hover:border-editor-borderHover rounded-lg transition-all" 
+        title="Open Output Folder">
+        <i data-lucide="folder" class="w-3.5 h-3.5 text-editor-orange"></i>
         <span>Output Folder</span>
       </button>
-      <button onclick="clearTerminalLogs()" class="p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-all" title="Clear Console Logs">
+
+      <button 
+        onclick="clearTerminalLogs()" 
+        class="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all border border-transparent hover:border-editor-border" 
+        title="Clear Output Logs">
         <i data-lucide="trash-2" class="w-4 h-4"></i>
       </button>
-      <button onclick="handleCloseApp()" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:text-white bg-rose-500/10 hover:bg-rose-600/80 border border-rose-500/30 rounded-lg transition-all ml-1" title="Quit Application">
-        <i data-lucide="power" class="w-3.5 h-3.5 text-rose-400"></i>
+
+      <button 
+        onclick="handleCloseApp()" 
+        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-editor-orange hover:text-white bg-orange-500/10 hover:bg-editor-orange border border-editor-orange/30 rounded-lg transition-all ml-1" 
+        title="Quit Application">
+        <i data-lucide="power" class="w-3.5 h-3.5"></i>
         <span>Quit</span>
       </button>
     </div>
   </header>
 
-  <!-- Main Split Dashboard Content Area -->
-  <main class="flex-1 flex overflow-hidden">
+  <!-- ========================================== -->
+  <!-- MAIN WORKSPACE: Two-Pane Split Layout     -->
+  <!-- ========================================== -->
+  <main class="flex-1 flex overflow-hidden bg-editor-black">
 
     <!-- ========================================== -->
-    <!-- LEFT PANEL: Controls & Settings (420px)   -->
+    <!-- LEFT PANEL: Inspector / Parameters (420px)-->
     <!-- ========================================== -->
-    <aside class="w-[430px] border-r border-slate-800/80 bg-slate-900/40 flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-5">
+    <aside class="w-[420px] border-r border-editor-border bg-editor-panel flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-5">
       
-      <div class="space-y-5">
-        <!-- Panel Title -->
-        <div>
-          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <i data-lucide="sliders" class="w-4 h-4 text-sky-400"></i>
-            Pipeline Parameters
+      <div class="space-y-4">
+        <!-- Panel Section Title -->
+        <div class="pb-1 border-b border-editor-border/60 flex items-center justify-between">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
+            <span class="w-1.5 h-3 bg-editor-orange rounded-sm"></span>
+            Project Settings
           </h2>
-          <p class="text-xs text-slate-500 mt-0.5">Configure media source, speech recognition, and Khmer neural voice.</p>
+          <span class="text-[10px] text-zinc-500 font-mono">Parameters</span>
         </div>
 
         <!-- 1. Video Source Input -->
-        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-3">
-          <label class="block text-xs font-semibold text-slate-200 flex items-center justify-between">
+        <div class="bg-editor-card border border-editor-border rounded-xl p-3.5 space-y-2.5">
+          <label class="block text-xs font-semibold text-white flex items-center justify-between">
             <span class="flex items-center gap-1.5">
-              <i data-lucide="video" class="w-3.5 h-3.5 text-sky-400"></i>
-              Target Video Source
+              <i data-lucide="film" class="w-3.5 h-3.5 text-editor-orange"></i>
+              Media Source
             </span>
-            <span class="text-[10px] text-slate-400">YouTube, Direct URL, or Local MP4</span>
+            <span class="text-[10px] text-zinc-500">YouTube or Local Video</span>
           </label>
 
           <!-- Input container with Paste & Browse -->
@@ -147,14 +160,14 @@
             <input 
               type="text" 
               id="input-url" 
-              placeholder="https://www.youtube.com/watch?v=... or local path" 
-              class="w-full bg-slate-950 border border-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 text-xs text-slate-100 placeholder-slate-600 rounded-lg pl-3 pr-20 py-2.5 outline-none transition-all"
+              placeholder="Paste URL or drag & drop video file..." 
+              class="w-full bg-editor-input border border-editor-border focus:border-editor-orange text-xs text-white placeholder-zinc-600 rounded-lg pl-3 pr-16 py-2.5 outline-none transition-all font-mono"
             />
             <div class="absolute right-1.5 flex items-center gap-1">
               <button 
                 onclick="handlePasteUrl()" 
                 type="button" 
-                class="px-2 py-1 text-[11px] font-medium text-slate-400 hover:text-sky-300 hover:bg-slate-800 rounded transition-all flex items-center gap-1"
+                class="px-2 py-1 text-[11px] font-medium text-zinc-400 hover:text-white hover:bg-zinc-800 rounded transition-all flex items-center gap-1"
                 title="Paste from clipboard">
                 <i data-lucide="clipboard" class="w-3 h-3"></i>
                 Paste
@@ -162,119 +175,118 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center justify-between pt-0.5">
             <button 
               type="button" 
               onclick="handleSelectLocalFile()" 
-              class="flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 transition-colors py-1">
+              class="flex items-center gap-1.5 text-xs font-medium text-editor-orange hover:text-editor-orangeHover transition-colors py-0.5">
               <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
-              Select local video file (.mp4, .mkv, .mov)
+              Browse local file (.mp4, .mkv, .mov)
             </button>
-            <span id="url-validation-badge" class="text-[11px] text-slate-500">Awaiting input</span>
+            <span id="url-validation-badge" class="text-[11px] text-zinc-500 font-mono">Awaiting input</span>
           </div>
         </div>
 
-        <!-- 2. Production Mode: Drama Recap vs Direct Dubbing -->
-        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-3">
+        <!-- 2. Production Style: Drama Recap vs Direct Dubbing -->
+        <div class="bg-editor-card border border-editor-border rounded-xl p-3.5 space-y-2.5">
           <div class="flex items-center justify-between">
-            <label class="block text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-              <i data-lucide="clapperboard" class="w-3.5 h-3.5 text-amber-400"></i>
+            <label class="block text-xs font-semibold text-white flex items-center gap-1.5">
+              <i data-lucide="clapperboard" class="w-3.5 h-3.5 text-editor-orange"></i>
               Production Style / ទម្រង់ផលិត
             </label>
-            <span class="px-1.5 py-0.5 text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 rounded">Recommended</span>
+            <span class="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-orange-500/10 text-editor-orange border border-editor-orange/30 rounded">Mode</span>
           </div>
 
-          <div class="grid grid-cols-2 gap-2.5">
+          <div class="grid grid-cols-2 gap-2">
             <!-- Mode 1: Drama Recap & Storyteller -->
-            <label class="mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-amber-500 bg-amber-500/10 shadow-sm shadow-amber-500/10" id="card-mode-recap">
+            <label class="mode-card relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all border-editor-orange bg-editor-orangeDim shadow-sm shadow-orange-500/10" id="card-mode-recap">
               <input type="radio" name="dubbing-style" value="recap" checked class="hidden" onchange="updateProductionMode(this.value)">
-              <div class="flex items-center justify-between mb-1.5">
+              <div class="flex items-center justify-between mb-1">
                 <span class="text-xs font-bold text-white flex items-center gap-1">
                   🎬 សង្ខេបរឿង
                 </span>
-                <span class="px-1.5 py-0.5 text-[9px] font-bold bg-amber-400/20 text-amber-300 rounded">Viral</span>
+                <span class="px-1.5 py-0.5 text-[9px] font-bold bg-editor-orange text-black rounded font-mono">RECAP</span>
               </div>
-              <div class="font-semibold text-xs text-slate-100">Drama Recap Storyteller</div>
-              <div class="text-[10px] text-slate-400 mt-0.5">AI analyzes the whole plot & narrates in thrilling spoken Khmer</div>
+              <div class="font-bold text-xs text-white">Drama Recap</div>
+              <div class="text-[10px] text-zinc-400 mt-0.5 leading-tight">AI narrates the plot with background SFX/music</div>
             </label>
 
             <!-- Mode 2: Direct Dialogue Dubbing -->
-            <label class="mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-slate-800 bg-slate-950/60 hover:border-slate-700" id="card-mode-direct">
+            <label class="mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-editor-border bg-zinc-900/60 hover:border-editor-borderHover" id="card-mode-direct">
               <input type="radio" name="dubbing-style" value="direct" class="hidden" onchange="updateProductionMode(this.value)">
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="text-xs font-bold text-slate-300 flex items-center gap-1">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-zinc-300 flex items-center gap-1">
                   🎙️ បញ្ចូលសំឡេង
                 </span>
-                <span class="px-1.5 py-0.5 text-[9px] font-semibold bg-slate-800 text-slate-400 rounded">1-to-1</span>
+                <span class="px-1.5 py-0.5 text-[9px] font-medium bg-zinc-800 text-zinc-400 rounded font-mono">1:1</span>
               </div>
-              <div class="font-semibold text-xs text-slate-100">Direct Dialogue Dubbing</div>
-              <div class="text-[10px] text-slate-400 mt-0.5">Dub character lines sentence-by-sentence with lip-sync matching</div>
+              <div class="font-bold text-xs text-white">Direct Dubbing</div>
+              <div class="text-[10px] text-zinc-400 mt-0.5 leading-tight">Line-by-line speech with sentence lip-sync</div>
             </label>
           </div>
         </div>
 
         <!-- 3. Khmer Neural Voice Selection -->
-        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-3">
+        <div class="bg-editor-card border border-editor-border rounded-xl p-3.5 space-y-2.5">
           <div class="flex items-center justify-between">
-            <label class="block text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-              <i data-lucide="volume-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-              Khmer Neural Voiceover
+            <label class="block text-xs font-semibold text-white flex items-center gap-1.5">
+              <i data-lucide="mic" class="w-3.5 h-3.5 text-editor-orange"></i>
+              Khmer Neural Voice
             </label>
-            <span class="px-1.5 py-0.5 text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded">edge-tts</span>
+            <span class="text-[10px] text-zinc-500 font-mono">edge-tts</span>
           </div>
 
-          <!-- Radio cards for Piseth and Sreymom -->
-          <div class="grid grid-cols-2 gap-2.5">
+          <div class="grid grid-cols-2 gap-2">
             <!-- Male: Piseth -->
-            <label class="voice-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-sky-500 bg-sky-500/10" id="card-piseth">
+            <label class="voice-card relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all border-editor-orange bg-editor-orangeDim" id="card-piseth">
               <input type="radio" name="voice" value="km-KH-PisethNeural" checked class="hidden" onchange="updateVoiceSelection(this.value)">
               <div class="flex items-center justify-between mb-1">
-                <div class="w-7 h-7 rounded-full bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-300 font-bold text-xs">
+                <div class="w-6 h-6 rounded bg-editor-orange text-black font-extrabold text-xs flex items-center justify-center">
                   P
                 </div>
-                <span class="px-1.5 py-0.5 text-[9px] font-semibold bg-sky-400/20 text-sky-300 rounded">Male</span>
+                <span class="px-1.5 py-0.5 text-[9px] font-bold bg-orange-500/20 text-editor-orange rounded font-mono">MALE</span>
               </div>
-              <div class="font-semibold text-xs text-slate-100">Piseth Neural</div>
-              <div class="text-[10px] text-slate-400 mt-0.5">Natural male narration for drama & news</div>
+              <div class="font-bold text-xs text-white">Piseth Neural</div>
+              <div class="text-[10px] text-zinc-400 mt-0.5 leading-tight">Natural male narration for drama & story</div>
             </label>
 
             <!-- Female: Sreymom -->
-            <label class="voice-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-slate-800 bg-slate-950/60 hover:border-slate-700" id="card-sreymom">
+            <label class="voice-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-editor-border bg-zinc-900/60 hover:border-editor-borderHover" id="card-sreymom">
               <input type="radio" name="voice" value="km-KH-SreymomNeural" class="hidden" onchange="updateVoiceSelection(this.value)">
               <div class="flex items-center justify-between mb-1">
-                <div class="w-7 h-7 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-xs">
+                <div class="w-6 h-6 rounded bg-zinc-800 text-zinc-300 font-extrabold text-xs flex items-center justify-center">
                   S
                 </div>
-                <span class="px-1.5 py-0.5 text-[9px] font-semibold bg-emerald-400/20 text-emerald-300 rounded">Female</span>
+                <span class="px-1.5 py-0.5 text-[9px] font-medium bg-zinc-800 text-zinc-400 rounded font-mono">FEMALE</span>
               </div>
-              <div class="font-semibold text-xs text-slate-100">Sreymom Neural</div>
-              <div class="text-[10px] text-slate-400 mt-0.5">Warm female voice for dialogue & stories</div>
+              <div class="font-bold text-xs text-white">Sreymom Neural</div>
+              <div class="text-[10px] text-zinc-400 mt-0.5 leading-tight">Warm female voice for dialogue & recap</div>
             </label>
           </div>
         </div>
 
-        <!-- 3. Pipeline Configurations: Whisper Model & Remuxing -->
-        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 space-y-3.5">
-          <label class="block text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-            <i data-lucide="cpu" class="w-3.5 h-3.5 text-indigo-400"></i>
+        <!-- 4. Pipeline Parameters & Engine Settings -->
+        <div class="bg-editor-card border border-editor-border rounded-xl p-3.5 space-y-3">
+          <label class="block text-xs font-semibold text-white flex items-center gap-1.5">
+            <i data-lucide="sliders" class="w-3.5 h-3.5 text-editor-orange"></i>
             Audio & Translation Engine
           </label>
 
-          <div class="grid grid-cols-2 gap-3">
-            <!-- Whisper Model Size -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <!-- Faster-Whisper Model Size -->
             <div>
-              <span class="block text-[11px] font-medium text-slate-400 mb-1">Faster-Whisper Model</span>
-              <select id="select-whisper-model" class="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg px-2.5 py-2 outline-none focus:border-sky-500">
+              <span class="block text-[11px] font-medium text-zinc-400 mb-1">Whisper Model</span>
+              <select id="select-whisper-model" class="w-full bg-editor-input border border-editor-border text-xs text-white rounded-lg px-2.5 py-2 outline-none focus:border-editor-orange">
                 <option value="base" selected>base (Fast CPU - int8)</option>
                 <option value="small">small (Balanced - int8)</option>
                 <option value="medium">medium (High Precision)</option>
               </select>
             </div>
 
-            <!-- Speech Rate -->
+            <!-- Narration Speed -->
             <div>
-              <span class="block text-[11px] font-medium text-slate-400 mb-1">Narration Speed</span>
-              <select id="select-speech-rate" class="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg px-2.5 py-2 outline-none focus:border-sky-500">
+              <span class="block text-[11px] font-medium text-zinc-400 mb-1">Speech Speed</span>
+              <select id="select-speech-rate" class="w-full bg-editor-input border border-editor-border text-xs text-white rounded-lg px-2.5 py-2 outline-none focus:border-editor-orange">
                 <option value="+0%" selected>Normal (1.0x)</option>
                 <option value="+10%">Energetic (1.1x)</option>
                 <option value="+20%">Fast Dub (1.2x)</option>
@@ -283,16 +295,16 @@
             </div>
           </div>
 
-          <!-- Lip-Sync Timing Delay -->
+          <!-- Subtitle Lip-Sync Delay -->
           <div>
             <div class="flex items-center justify-between mb-1">
-              <span class="block text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                <i data-lucide="clock" class="w-3 h-3 text-sky-400"></i>
-                Subtitle Lip-Sync Delay
+              <span class="block text-[11px] font-medium text-zinc-400 flex items-center gap-1">
+                <i data-lucide="clock" class="w-3 h-3 text-editor-orange"></i>
+                Subtitle Lip-Sync Offset
               </span>
-              <span class="text-[10px] text-emerald-400/80 font-medium">Auto-VAD Active</span>
+              <span class="text-[10px] text-editor-orange font-mono">VAD Active</span>
             </div>
-            <select id="select-audio-delay" class="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg px-2.5 py-2 outline-none focus:border-sky-500">
+            <select id="select-audio-delay" class="w-full bg-editor-input border border-editor-border text-xs text-white rounded-lg px-2.5 py-2 outline-none focus:border-editor-orange">
               <option value="250" selected>+250ms (Natural Lip-Sync & Subtitle Alignment)</option>
               <option value="350">+350ms (Slightly relaxed delay)</option>
               <option value="150">+150ms (Tighter timing)</option>
@@ -300,92 +312,92 @@
             </select>
           </div>
 
-          <!-- AI Drama Translation Engine (Gemini) -->
-          <div class="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 space-y-2">
+          <!-- AI Drama Translation Engine (OpenRouter / Gemini) -->
+          <div class="p-3 rounded-lg border border-editor-border bg-editor-input space-y-2">
             <div class="flex items-center justify-between">
-              <span class="block text-[11px] font-semibold text-slate-200 flex items-center gap-1.5">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
-                Gemini AI Drama Translator
+              <span class="block text-[11px] font-semibold text-white flex items-center gap-1.5">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-editor-orange"></i>
+                AI Drama Translation Engine
               </span>
-              <span class="text-[9px] text-amber-300 font-bold bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/30">Movie Quality</span>
+              <span class="text-[9px] text-editor-orange font-bold font-mono bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/20">Active</span>
             </div>
             <div class="relative">
               <input 
                 id="input-gemini-key" 
                 type="password" 
                 value=""
-                placeholder="Paste AI key (OpenRouter sk-or-... or Gemini AIzaSy...)" 
-                class="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 pr-14 outline-none focus:border-amber-400 placeholder-slate-600 transition-colors"
+                placeholder="AI API key (OpenRouter sk-or-... or Gemini...)" 
+                class="w-full bg-zinc-950 border border-editor-border text-xs text-white rounded-lg px-2.5 py-1.5 pr-14 outline-none focus:border-editor-orange placeholder-zinc-600 transition-colors font-mono"
                 oninput="saveGeminiKey(this.value)">
               <button 
                 type="button" 
                 onclick="toggleKeyVisibility()" 
-                id="btn-toggle-key"
-                class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 hover:text-slate-200 px-1.5 py-0.5 rounded bg-slate-800/80">
+                id="btn-toggle-key" 
+                class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] text-zinc-400 hover:text-white px-1.5 py-0.5 rounded bg-zinc-900 border border-editor-border">
                 Show
               </button>
             </div>
-            <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
-              <span>Get Free Key: <a href="https://openrouter.ai/keys" target="_blank" class="text-sky-400 underline hover:text-sky-300">openrouter.ai</a> or <a href="https://aistudio.google.com/" target="_blank" class="text-sky-400 underline hover:text-sky-300">aistudio</a></span>
-              <span id="gemini-status-text" class="text-amber-400 font-semibold text-[10px]">AI Drama Engine Active</span>
+            <div class="flex items-center justify-between text-[10px] text-zinc-400 pt-0.5">
+              <span>Free key: <a href="https://openrouter.ai/keys" target="_blank" class="text-editor-orange hover:underline">openrouter.ai</a></span>
+              <span id="gemini-status-text" class="text-editor-orange font-semibold text-[10px]">AI Engine Loaded</span>
             </div>
           </div>
 
-          <!-- Audio Mixing Mode -->
+          <!-- Audio-Video Remux Strategy -->
           <div>
-            <span class="block text-[11px] font-medium text-slate-400 mb-1">Audio-Video Remux Strategy</span>
+            <span class="block text-[11px] font-medium text-zinc-400 mb-1.5">Audio Mixing Strategy</span>
             <div class="space-y-1.5">
-              <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-800 bg-slate-950/60 cursor-pointer hover:border-slate-700">
-                <input type="radio" name="remux-mode" value="duck" checked class="text-sky-500 focus:ring-0">
+              <label class="flex items-center gap-2 p-2 rounded-lg border border-editor-border bg-editor-input cursor-pointer hover:border-editor-borderHover">
+                <input type="radio" name="remux-mode" value="duck" checked class="accent-orange-500">
                 <div class="text-[11px]">
-                  <span class="font-semibold text-slate-200">Studio Audio Ducking (Music & SFX)</span>
-                  <p class="text-slate-500 text-[10px]">Lowers original audio to 15% behind crisp Khmer speech (Best for Recap)</p>
+                  <span class="font-bold text-white">Studio Audio Ducking (Music & SFX)</span>
+                  <p class="text-zinc-500 text-[10px]">Lowers original audio to 15% behind spoken Khmer (Best for Recap)</p>
                 </div>
               </label>
 
-              <label class="flex items-center gap-2 p-2 rounded-lg border border-slate-800 bg-slate-950/60 cursor-pointer hover:border-slate-700">
-                <input type="radio" name="remux-mode" value="replace" class="text-sky-500 focus:ring-0">
+              <label class="flex items-center gap-2 p-2 rounded-lg border border-editor-border bg-editor-input cursor-pointer hover:border-editor-borderHover">
+                <input type="radio" name="remux-mode" value="replace" class="accent-orange-500">
                 <div class="text-[11px]">
-                  <span class="font-semibold text-slate-200">Full Voiceover Replacement</span>
-                  <p class="text-slate-500 text-[10px]">Pure Khmer dialogue audio track (-c:v copy -c:a aac -shortest)</p>
+                  <span class="font-bold text-white">Full Audio Replacement</span>
+                  <p class="text-zinc-500 text-[10px]">Replaces entire audio track with clean Khmer voiceover</p>
                 </div>
               </label>
             </div>
           </div>
 
-          <!-- Optional Network Proxy -->
-          <div class="pt-2 border-t border-slate-800/60">
+          <!-- Network Proxy Input -->
+          <div class="pt-2 border-t border-editor-border">
             <div class="flex items-center justify-between mb-1">
-              <span class="block text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                <i data-lucide="globe" class="w-3 h-3 text-sky-400"></i>
+              <span class="block text-[11px] font-medium text-zinc-400 flex items-center gap-1">
+                <i data-lucide="globe" class="w-3 h-3 text-editor-orange"></i>
                 Network Proxy (Optional)
               </span>
-              <span class="text-[10px] text-slate-500">Auto-detects 127.0.0.1:7890 if blank</span>
+              <span class="text-[10px] text-zinc-600 font-mono">127.0.0.1:7890</span>
             </div>
             <input 
               id="input-proxy" 
               type="text" 
               placeholder="e.g. 127.0.0.1:7890 (for Clash / VPN)" 
-              class="w-full bg-slate-950 border border-slate-800 text-xs text-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-sky-500 placeholder-slate-600 transition-colors">
+              class="w-full bg-editor-input border border-editor-border text-xs text-white rounded-lg px-2.5 py-1.5 outline-none focus:border-editor-orange placeholder-zinc-600 transition-colors font-mono">
           </div>
         </div>
 
       </div>
 
       <!-- Action Button Area -->
-      <div class="pt-2 border-t border-slate-800/80 space-y-2">
+      <div class="pt-3 border-t border-editor-border space-y-2">
         <button 
           id="btn-start" 
           onclick="handleStartPipeline()" 
-          class="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-gradient-to-r from-sky-500 via-blue-600 to-emerald-500 hover:from-sky-400 hover:via-blue-500 hover:to-emerald-400 shadow-lg shadow-sky-500/25 active:scale-[0.99] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none">
-          <i data-lucide="play" id="btn-icon" class="w-4 h-4 fill-white"></i>
+          class="w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider text-black bg-editor-orange hover:bg-editor-orangeHover active:scale-[0.99] shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none">
+          <i data-lucide="play" id="btn-icon" class="w-4 h-4 fill-black text-black"></i>
           <span id="btn-text">Generate Drama Recap (សង្ខេបរឿង)</span>
         </button>
 
         <button 
           id="btn-cancel" 
           onclick="handleCancelPipeline()" 
-          class="w-full py-2 px-3 rounded-lg text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 border border-rose-500/30 transition-all flex items-center justify-center gap-1.5 hidden">
+          class="w-full py-2 px-3 rounded-lg text-xs font-bold text-editor-orange hover:text-white hover:bg-orange-500/10 border border-editor-orange/30 transition-all flex items-center justify-center gap-1.5 hidden">
           <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
           <span>Cancel Operation</span>
         </button>
@@ -394,107 +406,108 @@
     </aside>
 
     <!-- ========================================== -->
-    <!-- RIGHT PANEL: Live Monitor & Diagnostics   -->
+    <!-- RIGHT PANEL: Editor Timeline & Monitor    -->
     <!-- ========================================== -->
-    <section class="flex-1 flex flex-col overflow-hidden bg-slate-950/70 p-6 space-y-5">
+    <section class="flex-1 flex flex-col overflow-hidden bg-editor-black p-5 space-y-4">
 
-      <!-- Top Section: Progress & High-Level Visual State -->
-      <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-5 shadow-xl backdrop-blur space-y-4">
+      <!-- Top Section: Editor Pipeline Timeline Track -->
+      <div class="bg-editor-panel border border-editor-border rounded-xl p-4 shadow-xl space-y-3.5">
         
         <div class="flex items-center justify-between">
-          <div>
-            <div class="text-xs font-semibold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <span id="stage-badge" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700">Idle</span>
-              <span id="stage-headline" class="text-slate-200 font-medium">Ready to initialize dubbing pipeline</span>
-            </div>
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-editor-orange"></span>
+            <span class="text-xs font-bold uppercase tracking-wider text-white">Pipeline Timeline</span>
+            <span class="text-zinc-600">•</span>
+            <span id="stage-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-900 text-zinc-300 border border-editor-border">Idle</span>
+            <span id="stage-headline" class="text-zinc-400 text-xs">Ready to initialize dubbing pipeline</span>
           </div>
           <div class="text-right">
-            <span id="progress-percentage" class="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-emerald-400">0%</span>
+            <span id="progress-percentage" class="text-2xl font-black tracking-tight text-editor-orange font-mono">0%</span>
           </div>
         </div>
 
-        <!-- Main Dynamic Progress Bar -->
-        <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800/80">
+        <!-- Main Clean Orange Progress Bar -->
+        <div class="w-full h-2.5 bg-editor-black rounded-full overflow-hidden p-0.5 border border-editor-border">
           <div 
             id="main-progress-bar" 
-            class="h-full rounded-full bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-400 transition-all duration-300 ease-out shadow-lg shadow-sky-500/20" 
+            class="h-full rounded-full bg-editor-orange transition-all duration-300 ease-out shadow-md shadow-orange-500/30" 
             style="width: 0%;">
           </div>
         </div>
 
-        <!-- 6 Step Visual Tracker Cards -->
-        <div class="grid grid-cols-6 gap-2.5 pt-1">
+        <!-- 6 Step Timeline Track Cards -->
+        <div class="grid grid-cols-6 gap-2 pt-0.5">
           
           <!-- Step 1: Ingestion -->
-          <div id="step-card-1" class="step-card p-3 rounded-xl border border-slate-800/80 bg-slate-950/40 transition-all duration-300">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-bold text-slate-500 step-num">01</span>
-              <span class="step-status text-slate-600">
-                <i data-lucide="circle-dashed" class="w-3.5 h-3.5"></i>
+          <div id="step-card-1" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">01</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
               </span>
             </div>
-            <div class="text-xs font-semibold text-slate-300">Ingestion</div>
-            <div class="text-[10px] text-slate-500 truncate">yt-dlp stream</div>
+            <div class="text-xs font-bold text-white">Ingestion</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">yt-dlp stream</div>
           </div>
 
           <!-- Step 2: Extraction -->
-          <div id="step-card-2" class="step-card p-3 rounded-xl border border-slate-800/80 bg-slate-950/40 transition-all duration-300">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-bold text-slate-500 step-num">02</span>
-              <span class="step-status text-slate-600">
-                <i data-lucide="circle-dashed" class="w-3.5 h-3.5"></i>
+          <div id="step-card-2" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">02</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
               </span>
             </div>
-            <div class="text-xs font-semibold text-slate-300">Extraction</div>
-            <div class="text-[10px] text-slate-500 truncate">16kHz WAV</div>
+            <div class="text-xs font-bold text-white">Extraction</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">16kHz WAV</div>
           </div>
 
           <!-- Step 3: Transcription -->
-          <div id="step-card-3" class="step-card p-3 rounded-xl border border-slate-800/80 bg-slate-950/40 transition-all duration-300">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-bold text-slate-500 step-num">03</span>
-              <span class="step-status text-slate-600">
-                <i data-lucide="circle-dashed" class="w-3.5 h-3.5"></i>
+          <div id="step-card-3" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">03</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
               </span>
             </div>
-            <div class="text-xs font-semibold text-slate-300">Transcribe</div>
-            <div class="text-[10px] text-slate-500 truncate">faster-whisper</div>
+            <div class="text-xs font-bold text-white">Transcribe</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">faster-whisper</div>
           </div>
 
           <!-- Step 4: Translation -->
-          <div id="step-card-4" class="step-card p-3 rounded-xl border border-slate-800/80 bg-slate-950/40 transition-all duration-300">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-bold text-slate-500 step-num">04</span>
-              <span class="step-status text-slate-600">
-                <i data-lucide="circle-dashed" class="w-3.5 h-3.5"></i>
+          <div id="step-card-4" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">04</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
               </span>
             </div>
-            <div class="text-xs font-semibold text-slate-300">Translate</div>
-            <div class="text-[10px] text-slate-500 truncate">Khmer (km)</div>
+            <div class="text-xs font-bold text-white">Translate</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">Khmer (km)</div>
           </div>
 
           <!-- Step 5: Synthesis -->
-          <div id="step-card-5" class="step-card p-3 rounded-xl border border-slate-800/80 bg-slate-950/40 transition-all duration-300">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-bold text-slate-500 step-num">05</span>
-              <span class="step-status text-slate-600">
-                <i data-lucide="circle-dashed" class="w-3.5 h-3.5"></i>
+          <div id="step-card-5" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">05</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
               </span>
             </div>
-            <div class="text-xs font-semibold text-slate-300">Voiceover</div>
-            <div class="text-[10px] text-slate-500 truncate">edge-tts Khmer</div>
+            <div class="text-xs font-bold text-white">Voiceover</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">edge-tts Khmer</div>
           </div>
 
           <!-- Step 6: Remux -->
-          <div id="step-card-6" class="step-card p-3 rounded-xl border border-slate-800/80 bg-slate-950/40 transition-all duration-300">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-bold text-slate-500 step-num">06</span>
-              <span class="step-status text-slate-600">
-                <i data-lucide="circle-dashed" class="w-3.5 h-3.5"></i>
+          <div id="step-card-6" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">06</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
               </span>
             </div>
-            <div class="text-xs font-semibold text-slate-300">Remux</div>
-            <div class="text-[10px] text-slate-500 truncate">ffmpeg render</div>
+            <div class="text-xs font-bold text-white">Remux</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">ffmpeg render</div>
           </div>
 
         </div>
@@ -502,21 +515,21 @@
       </div>
 
       <!-- Success Notification Banner (Revealed on Completion) -->
-      <div id="success-banner" class="hidden bg-emerald-950/40 border border-emerald-500/40 rounded-xl p-4 shadow-xl backdrop-blur transition-all">
+      <div id="success-banner" class="hidden bg-editor-panel border border-editor-orange rounded-xl p-4 shadow-xl transition-all">
         <div class="flex items-start justify-between">
           <div class="flex items-start gap-3">
-            <div class="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center shrink-0 mt-0.5">
-              <i data-lucide="check-circle" class="w-6 h-6 text-emerald-400"></i>
+            <div class="w-10 h-10 rounded-lg bg-editor-orange text-black flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="check" class="w-6 h-6 stroke-[3]"></i>
             </div>
             <div>
-              <h3 class="text-sm font-bold text-emerald-300 flex items-center gap-2">
-                Dubbing Pipeline Completed Successfully!
-                <span class="px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-200 rounded-full" id="success-time">Finished</span>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                Dubbing Pipeline Complete!
+                <span class="px-2 py-0.5 text-[10px] bg-orange-500/20 text-editor-orange rounded font-mono" id="success-time">Finished</span>
               </h3>
-              <p class="text-xs text-slate-300 mt-1 font-mono break-all" id="success-filepath">-</p>
-              <div class="flex items-center gap-4 mt-2 text-[11px] text-slate-400">
+              <p class="text-xs text-zinc-300 mt-1 font-mono break-all" id="success-filepath">-</p>
+              <div class="flex items-center gap-3 mt-2 text-[11px] text-zinc-400 font-mono">
                 <span id="success-filesize">Size: 0 MB</span>
-                <span class="text-slate-600">•</span>
+                <span class="text-zinc-600">•</span>
                 <span id="success-duration">Duration: 00:00</span>
               </div>
             </div>
@@ -524,44 +537,46 @@
           <div class="flex items-center gap-2 shrink-0">
             <button 
               onclick="handlePlayVideo()" 
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500 hover:bg-emerald-400 text-slate-950 flex items-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all">
-              <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+              class="px-3.5 py-2 rounded-lg text-xs font-bold bg-editor-orange hover:bg-editor-orangeHover text-black flex items-center gap-1.5 shadow-md shadow-orange-500/20 transition-all">
+              <i data-lucide="play" class="w-3.5 h-3.5 fill-black"></i>
               Play Video
             </button>
             <button 
               onclick="handleRevealFile()" 
-              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-all">
-              <i data-lucide="folder" class="w-3.5 h-3.5 text-amber-400"></i>
+              class="px-3.5 py-2 rounded-lg text-xs font-bold bg-zinc-900 hover:bg-zinc-800 text-white border border-editor-border hover:border-editor-borderHover flex items-center gap-1.5 transition-all">
+              <i data-lucide="folder" class="w-3.5 h-3.5 text-editor-orange"></i>
               Show in Folder
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Bottom Section: Integrated Live Terminal Console -->
-      <div class="flex-1 flex flex-col bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+      <!-- Bottom Section: Studio Terminal Console Output -->
+      <div class="flex-1 flex flex-col bg-editor-black border border-editor-border rounded-xl overflow-hidden shadow-2xl">
+        
         <!-- Terminal Header Bar -->
-        <div class="h-9 bg-slate-900 border-b border-slate-800 px-4 flex items-center justify-between shrink-0">
+        <div class="h-9 bg-editor-panel border-b border-editor-border px-4 flex items-center justify-between shrink-0">
           <div class="flex items-center gap-2">
+            <!-- Studio Minimalist Dots -->
             <div class="flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-zinc-800"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-editor-orange"></span>
             </div>
-            <span class="text-[11px] font-mono text-slate-400 ml-2 flex items-center gap-1.5">
-              <i data-lucide="terminal" class="w-3.5 h-3.5 text-sky-400"></i>
-              Live Execution Terminal
+            <span class="text-[11px] font-mono text-zinc-300 ml-2 flex items-center gap-1.5">
+              <i data-lucide="terminal" class="w-3.5 h-3.5 text-editor-orange"></i>
+              Output Monitor
             </span>
           </div>
 
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer select-none">
-              <input type="checkbox" id="chk-autoscroll" checked class="rounded border-slate-700 text-sky-500 focus:ring-0">
+          <div class="flex items-center gap-3 font-mono">
+            <label class="flex items-center gap-1.5 text-[10px] text-zinc-400 cursor-pointer select-none">
+              <input type="checkbox" id="chk-autoscroll" checked class="accent-orange-500">
               Auto-scroll
             </label>
             <button 
               onclick="copyTerminalLogs()" 
-              class="text-[10px] text-slate-400 hover:text-slate-200 flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-slate-800 transition-colors">
+              class="text-[10px] text-zinc-400 hover:text-white flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-zinc-800 transition-colors">
               <i data-lucide="copy" class="w-3 h-3"></i>
               Copy Logs
             </button>
@@ -569,8 +584,8 @@
         </div>
 
         <!-- Terminal Logs Window Body -->
-        <div id="terminal-body" class="flex-1 p-4 font-mono text-xs overflow-y-auto space-y-1.5 leading-relaxed bg-slate-950/90 selection:bg-sky-500/30">
-          <div class="text-slate-500 italic">
+        <div id="terminal-body" class="flex-1 p-4 font-mono text-xs overflow-y-auto space-y-1.5 leading-relaxed bg-editor-black text-zinc-300">
+          <div class="text-zinc-500 italic">
             [System initialized] KhmerDubStudio ready. Enter a video URL or select a local video to begin.
           </div>
         </div>
@@ -620,7 +635,8 @@
         cancel_pipeline: { url: "/api/cancel_pipeline" },
         open_output_folder: { url: "/api/open_output_folder", body: args[0] ? { path: args[0] } : {} },
         open_video: { url: "/api/open_video", body: { file_path: args[0] } },
-        reveal_in_folder: { url: "/api/reveal_in_folder", body: { file_path: args[0] } }
+        reveal_in_folder: { url: "/api/reveal_in_folder", body: { file_path: args[0] } },
+        close_app: { url: "/api/close_app" }
       };
       const route = routes[method];
       if (!route) throw new Error(`Unsupported web API method: ${method}`);
@@ -656,15 +672,14 @@
       const btnText = document.getElementById("btn-text");
 
       if (mode === "recap") {
-        cardRecap.className = "mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-amber-500 bg-amber-500/10 shadow-sm shadow-amber-500/10";
-        cardDirect.className = "mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-slate-800 bg-slate-950/60 hover:border-slate-700";
+        cardRecap.className = "mode-card relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all border-editor-orange bg-editor-orangeDim shadow-sm shadow-orange-500/10";
+        cardDirect.className = "mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-editor-border bg-zinc-900/60 hover:border-editor-borderHover";
         if (btnText) btnText.textContent = "Generate Drama Recap (សង្ខេបរឿង)";
-        // For recaps, studio ducking with original music and sound effects creates the authentic movie recap feel
         const duckRadio = document.querySelector('input[name="remux-mode"][value="duck"]');
         if (duckRadio) duckRadio.checked = true;
       } else {
-        cardDirect.className = "mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-sky-500 bg-sky-500/10 shadow-sm shadow-sky-500/10";
-        cardRecap.className = "mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-slate-800 bg-slate-950/60 hover:border-slate-700";
+        cardDirect.className = "mode-card relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all border-editor-orange bg-editor-orangeDim shadow-sm shadow-orange-500/10";
+        cardRecap.className = "mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-editor-border bg-zinc-900/60 hover:border-editor-borderHover";
         if (btnText) btnText.textContent = "Start Dubbing Pipeline";
       }
     }
@@ -676,11 +691,11 @@
       const sreymomCard = document.getElementById("card-sreymom");
 
       if (voiceVal === "km-KH-PisethNeural") {
-        pisethCard.className = "voice-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-sky-500 bg-sky-500/10";
-        sreymomCard.className = "voice-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-slate-800 bg-slate-950/60 hover:border-slate-700";
+        pisethCard.className = "voice-card relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all border-editor-orange bg-editor-orangeDim";
+        sreymomCard.className = "voice-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-editor-border bg-zinc-900/60 hover:border-editor-borderHover";
       } else {
-        sreymomCard.className = "voice-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-emerald-500 bg-emerald-500/10";
-        pisethCard.className = "voice-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-slate-800 bg-slate-950/60 hover:border-slate-700";
+        sreymomCard.className = "voice-card relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all border-editor-orange bg-editor-orangeDim";
+        pisethCard.className = "voice-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-editor-border bg-zinc-900/60 hover:border-editor-borderHover";
       }
     }
 
@@ -693,7 +708,7 @@
           validateInput();
         }
       } catch (err) {
-        appendTerminalLog("WARN", "Clipboard access was not permitted by browser; please paste with Ctrl+V.");
+        appendTerminalLog("WARN", "Clipboard access was not permitted by browser; please paste with Cmd+V.");
       }
     }
 
@@ -706,20 +721,20 @@
       const badge = document.getElementById("url-validation-badge");
       if (!val) {
         badge.textContent = "Awaiting input";
-        badge.className = "text-[11px] text-slate-500";
+        badge.className = "text-[11px] text-zinc-500 font-mono";
         return false;
       }
       if (val.startsWith("http://") || val.startsWith("https://")) {
-        badge.textContent = "✓ Valid Web URL";
-        badge.className = "text-[11px] text-emerald-400 font-medium";
+        badge.textContent = "✓ Web URL";
+        badge.className = "text-[11px] text-editor-orange font-mono font-medium";
         return true;
       } else if (val.endsWith(".mp4") || val.endsWith(".mkv") || val.endsWith(".mov") || val.endsWith(".avi")) {
-        badge.textContent = "✓ Local Video Path";
-        badge.className = "text-[11px] text-sky-400 font-medium";
+        badge.textContent = "✓ Local Video";
+        badge.className = "text-[11px] text-white font-mono font-medium";
         return true;
       } else {
-        badge.textContent = "• Custom Input / URL";
-        badge.className = "text-[11px] text-amber-400 font-medium";
+        badge.textContent = "• Input Ready";
+        badge.className = "text-[11px] text-zinc-400 font-mono";
         return true;
       }
     }
@@ -785,7 +800,7 @@
       try {
         const res = await invokeApi("open_output_folder");
         if (res && res.web) {
-          appendTerminalLog("INFO", `Output folder (container): ${res.path}. Files are saved to the mounted ./output folder on your host.`);
+          appendTerminalLog("INFO", `Output folder: ${res.path}.`);
         }
       } catch (err) {
         appendTerminalLog("INFO", "Output folder path: ./output/");
@@ -795,7 +810,7 @@
     // Force Quit Application
     async function handleCloseApp() {
       try {
-        appendTerminalLog("INFO", "Shutting down application cleanly...");
+        appendTerminalLog("INFO", "Shutting down application...");
         await invokeApi("close_app");
       } catch (err) {
         window.close();
@@ -819,15 +834,11 @@
 
     // Reveal File in Folder
     async function handleRevealFile() {
-      if (completedDownloadUrl) {
-        window.open(completedDownloadUrl, "_blank");
-        return;
-      }
       if (completedOutputPath) {
         try {
           const res = await invokeApi("reveal_in_folder", completedOutputPath);
           if (res && res.web) {
-            appendTerminalLog("INFO", `Exported file: ${completedOutputPath}. Use the mounted ./output folder to access it.`);
+            appendTerminalLog("INFO", `Exported file: ${completedOutputPath}. Access it in ./output folder.`);
           }
         } catch (err) {
           appendTerminalLog("ERROR", `Unable to reveal file: ${err}`);
@@ -840,11 +851,11 @@
       const statusText = document.getElementById("gemini-status-text");
       if (statusText) {
         if (val.trim()) {
-          statusText.innerText = "Gemini AI Engine Active";
-          statusText.className = "text-amber-400 font-semibold text-[10px]";
+          statusText.innerText = "AI Engine Active";
+          statusText.className = "text-editor-orange font-semibold text-[10px]";
         } else {
-          statusText.innerText = "Blank = free Google Translate";
-          statusText.className = "text-slate-500 text-[10px]";
+          statusText.innerText = "Blank = Free Google Fallback";
+          statusText.className = "text-zinc-500 text-[10px]";
         }
       }
     }
@@ -895,8 +906,8 @@
       completedDownloadUrl = "";
       document.getElementById("success-banner").classList.add("hidden");
 
-      appendTerminalLog("INFO", `Starting KhmerDubStudio pipeline for: ${url}`);
-      appendTerminalLog("INFO", `Voice: ${selectedVoice} | Whisper Model: ${whisperModel} | Remux: ${remuxMode}`);
+      appendTerminalLog("INFO", `Initializing dubbing pipeline for: ${url}`);
+      appendTerminalLog("INFO", `Mode: ${selectedProductionMode.toUpperCase()} | Voice: ${selectedVoice} | Model: ${whisperModel}`);
 
       const apiReady = IS_WEB || await waitForPywebviewApi(4000);
       if (apiReady) {
@@ -911,7 +922,7 @@
           setRunningUI(false);
         }
       } else {
-        appendTerminalLog("WARN", "pywebview API bridge is not connected or still initializing. If you just opened the app, please wait a moment and click again.");
+        appendTerminalLog("WARN", "Bridge is initializing. If you just launched, wait a few seconds and try again.");
         setRunningUI(false);
       }
     }
@@ -941,15 +952,15 @@
         btnText.innerHTML = `<span class="inline-block animate-spin mr-2">⟳</span> Processing Pipeline...`;
         btnCancel.classList.remove("hidden");
 
-        statusDot.className = "w-2 h-2 rounded-full bg-sky-400 animate-pulse shadow-sm shadow-sky-400/50";
+        statusDot.className = "w-2 h-2 rounded-full bg-editor-orange animate-pulse shadow-sm shadow-orange-500/50";
         statusText.textContent = "Processing";
       } else {
         btnStart.disabled = false;
         btnStart.classList.remove("opacity-50", "pointer-events-none");
-        btnText.textContent = "Start Dubbing Pipeline";
+        btnText.textContent = selectedProductionMode === "recap" ? "Generate Drama Recap (សង្ខេបរឿង)" : "Start Dubbing Pipeline";
         btnCancel.classList.add("hidden");
 
-        statusDot.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50";
+        statusDot.className = "w-2 h-2 rounded-full bg-white shadow-sm shadow-white/50";
         statusText.textContent = "Ready";
       }
       lucide.createIcons();
@@ -966,7 +977,7 @@
       document.getElementById("stage-headline").textContent = "Initializing pipeline...";
     }
 
-    // Update single step card visual state
+    // Update single step card visual state (Clean Editor Styling: Orange, White, Black)
     function updateStepVisual(stepNum, status) {
       const card = document.getElementById(`step-card-${stepNum}`);
       if (!card) return;
@@ -975,26 +986,26 @@
       const statusEl = card.querySelector(".step-status");
 
       if (status === "pending") {
-        card.className = "step-card p-3 rounded-xl border border-slate-800/80 bg-slate-950/40 transition-all duration-300";
-        numEl.className = "text-[10px] font-bold text-slate-500 step-num";
-        statusEl.innerHTML = `<i data-lucide="circle-dashed" class="w-3.5 h-3.5 text-slate-600"></i>`;
+        card.className = "step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200";
+        numEl.className = "text-[10px] font-mono font-bold text-zinc-500 step-num";
+        statusEl.innerHTML = `<i data-lucide="circle-dashed" class="w-3 h-3 text-zinc-600"></i>`;
       } else if (status === "active") {
-        card.className = "step-card p-3 rounded-xl border border-sky-500/80 bg-sky-950/20 shadow-lg shadow-sky-500/10 ring-1 ring-sky-500/30 transition-all duration-300";
-        numEl.className = "text-[10px] font-bold text-sky-400 step-num";
-        statusEl.innerHTML = `<span class="inline-block w-2.5 h-2.5 rounded-full bg-sky-400 animate-ping"></span>`;
+        card.className = "step-card p-2.5 rounded-lg border-2 border-editor-orange bg-editor-orangeDim shadow-md shadow-orange-500/10 ring-1 ring-orange-500/30 transition-all duration-200";
+        numEl.className = "text-[10px] font-mono font-bold text-editor-orange step-num";
+        statusEl.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-editor-orange animate-ping"></span>`;
       } else if (status === "completed") {
-        card.className = "step-card p-3 rounded-xl border border-emerald-500/40 bg-emerald-950/10 transition-all duration-300";
-        numEl.className = "text-[10px] font-bold text-emerald-400 step-num";
-        statusEl.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>`;
+        card.className = "step-card p-2.5 rounded-lg border border-zinc-700 bg-zinc-900 transition-all duration-200";
+        numEl.className = "text-[10px] font-mono font-bold text-white step-num";
+        statusEl.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-editor-orange"></i>`;
       } else if (status === "error") {
-        card.className = "step-card p-3 rounded-xl border border-rose-500/60 bg-rose-950/20 transition-all duration-300";
-        numEl.className = "text-[10px] font-bold text-rose-400 step-num";
-        statusEl.innerHTML = `<i data-lucide="alert-circle" class="w-3.5 h-3.5 text-rose-400"></i>`;
+        card.className = "step-card p-2.5 rounded-lg border border-red-600 bg-red-950/20 transition-all duration-200";
+        numEl.className = "text-[10px] font-mono font-bold text-red-400 step-num";
+        statusEl.innerHTML = `<i data-lucide="alert-triangle" class="w-3 h-3 text-red-400"></i>`;
       }
       lucide.createIcons();
     }
 
-    // Append Log to Terminal
+    // Append Log to Terminal (Monochrome + Orange Highlights)
     function appendTerminalLog(level, message, khmerText = null) {
       const body = document.getElementById("terminal-body");
       const row = document.createElement("div");
@@ -1003,31 +1014,31 @@
       const now = new Date();
       const timeStr = now.toTimeString().split(" ")[0];
 
-      let levelBadge = `<span class="text-slate-500">[${timeStr}]</span>`;
+      let levelBadge = `<span class="text-zinc-600">[${timeStr}]</span>`;
       
       switch (level.toUpperCase()) {
         case "SUCCESS":
-          levelBadge += ` <span class="text-emerald-400 font-bold">[SUCCESS]</span>`;
+          levelBadge += ` <span class="text-editor-orange font-bold font-mono">[SUCCESS]</span>`;
           break;
         case "ERROR":
-          levelBadge += ` <span class="text-rose-400 font-bold">[ERROR]</span>`;
+          levelBadge += ` <span class="bg-editor-orange text-black font-extrabold px-1 rounded font-mono">[ERROR]</span>`;
           break;
         case "WARN":
-          levelBadge += ` <span class="text-amber-400 font-bold">[WARN]</span>`;
+          levelBadge += ` <span class="text-orange-300 font-bold font-mono">[WARN]</span>`;
           break;
         case "TRANSLATE":
-          levelBadge += ` <span class="text-indigo-400 font-bold">[TRANSLATE]</span>`;
+          levelBadge += ` <span class="text-editor-orange font-bold font-mono">[TRANSLATE]</span>`;
           break;
         case "WHISPER":
-          levelBadge += ` <span class="text-purple-400 font-bold">[SPEECH]</span>`;
+          levelBadge += ` <span class="text-zinc-300 font-bold font-mono">[SPEECH]</span>`;
           break;
         default:
-          levelBadge += ` <span class="text-sky-400 font-bold">[INFO]</span>`;
+          levelBadge += ` <span class="text-zinc-400 font-bold font-mono">[INFO]</span>`;
       }
 
-      let content = `<span>${escapeHtml(message)}</span>`;
+      let content = `<span class="text-zinc-200">${escapeHtml(message)}</span>`;
       if (khmerText) {
-        content += `<div class="mt-0.5 ml-4 text-emerald-300 font-sans text-xs bg-slate-900/80 px-2 py-1 rounded border border-emerald-500/20">➔ ភាសាខ្មែរ: ${escapeHtml(khmerText)}</div>`;
+        content += `<div class="mt-1 ml-3 text-white font-sans text-xs bg-editor-card px-2.5 py-1.5 rounded border border-editor-orange/40">➔ ភាសាខ្មែរ: ${escapeHtml(khmerText)}</div>`;
       }
 
       row.innerHTML = `<div class="shrink-0">${levelBadge}</div> <div class="flex-1">${content}</div>`;
@@ -1046,13 +1057,13 @@
 
     function clearTerminalLogs() {
       const body = document.getElementById("terminal-body");
-      body.innerHTML = `<div class="text-slate-500 italic">[Logs cleared] Ready.</div>`;
+      body.innerHTML = `<div class="text-zinc-600 italic">[Logs cleared] Output monitor ready.</div>`;
     }
 
     function copyTerminalLogs() {
       const body = document.getElementById("terminal-body");
       navigator.clipboard.writeText(body.innerText).then(() => {
-        appendTerminalLog("INFO", "Console logs copied to clipboard.");
+        appendTerminalLog("INFO", "Logs copied to clipboard.");
       });
     }
 
@@ -1061,7 +1072,6 @@
     // ==========================================
 
     window.onEngineUpdate = function(data) {
-      // data: { stage, stage_name, progress, message, log: { level, text, khmer } }
       if (!data) return;
 
       if (data.progress !== undefined) {
@@ -1096,14 +1106,13 @@
     };
 
     window.onJobComplete = function(data) {
-      // Mark all 6 stages as completed
       for (let i = 1; i <= 6; i++) {
         updateStepVisual(i, "completed");
       }
       document.getElementById("main-progress-bar").style.width = "100%";
       document.getElementById("progress-percentage").textContent = "100%";
       document.getElementById("stage-badge").textContent = "Completed";
-      document.getElementById("stage-headline").textContent = "Khmer dubbed video exported successfully!";
+      document.getElementById("stage-headline").textContent = "Dubbing exported successfully!";
 
       completedOutputPath = data.output_path || "";
       completedDownloadUrl = data.download_url || "";
@@ -1119,9 +1128,14 @@
     };
 
     window.onJobError = function(data) {
-      const stage = data.stage || 1;
-      updateStepVisual(stage, "error");
+      const stage = data.stage || 'Pipeline';
+      document.getElementById("stage-badge").textContent = "Failed";
+      document.getElementById("stage-headline").textContent = `Error at Stage ${stage}: ${data.error || 'Failed'}`;
       setRunningUI(false);
+
+      if (data.stage) {
+        updateStepVisual(parseInt(data.stage), "error");
+      }
       appendTerminalLog("ERROR", `Pipeline failure at Stage ${stage}: ${data.error || 'Unknown error'}`);
     };
 
