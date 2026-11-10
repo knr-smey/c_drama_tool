@@ -594,6 +594,7 @@ class DubbingAPI:
         gemini_api_key = options.get("gemini_api_key", "").strip() or os.environ.get("GEMINI_API_KEY", "").strip()
         audio_delay_ms = float(options.get("audio_delay_ms", 250))
         production_mode = options.get("production_mode", "recap")
+        vocal_enhancer = options.get("vocal_enhancer", "studio_human")
         if production_mode == "recap":
             remux_mode = "duck"  # In recap mode, background audio ducking keeps dramatic movie score & SFX
 
@@ -651,7 +652,7 @@ class DubbingAPI:
             # STAGE 5: Voiceover Synthesis (edge-tts) & Audio Alignment
             # =========================================================
             aligned_voiceover_wav = self._stage_5_synthesize_voiceover(
-                translated_segments, voice, speech_rate, video_duration, job_stem_dir, proxy, audio_delay_ms
+                translated_segments, voice, speech_rate, video_duration, job_stem_dir, proxy, audio_delay_ms, vocal_enhancer
             )
             if self._is_aborted:
                 return
@@ -1474,19 +1475,27 @@ class DubbingAPI:
 
     def _stage_5_synthesize_voiceover(self, segments: list, voice: str, rate: str,
                                       total_duration: float, stem_dir: str, proxy_url: str = "",
-                                      audio_delay_ms: float = 250.0) -> str:
+                                      audio_delay_ms: float = 250.0,
+                                      vocal_enhancer: str = "studio_human") -> str:
         """
-        Synthesizes Khmer speech for each segment using edge-tts,
-        then aligns all segments into a time-synchronized full-length PCM audio track.
-        Includes audio_delay_ms offset for smooth lip-sync and subtitle alignment.
+        Synthesizes natural Khmer speech for each segment using edge-tts with
+        SSML natural breathing and studio vocal mastering (human chest warmth EQ,
+        de-essing, broadcast dynamic compression & acoustic room presence).
         """
+        enhancer_label = {
+            "studio_human": "Studio Human Voice (Chest Warmth + Natural Breathing)",
+            "dramatic_movie": "Dramatic Movie Narrator (Deep Tone + Studio Reverb)",
+            "warm_storyteller": "Warm Storyteller (Intimate Acoustic Presence)",
+            "raw": "Standard Synthetic Voice (Dry)"
+        }.get(vocal_enhancer, "Studio Human Voice")
+
         self._emit_progress(
             stage=5,
             stage_name="Voiceover Synthesis",
             progress=62.0,
-            message=f"Synthesizing neural voiceover ({voice})...",
+            message=f"Synthesizing voiceover: {voice} [{enhancer_label}]...",
             log_level="INFO",
-            log_text=f"Connecting to Microsoft Edge TTS with voice: {voice} (rate={rate}, delay=+{audio_delay_ms:.0f}ms)..."
+            log_text=f"Connecting to Microsoft Edge TTS ({voice}, rate={rate}, enhancer={vocal_enhancer}, delay=+{audio_delay_ms:.0f}ms)..."
         )
 
         import edge_tts
@@ -1507,6 +1516,44 @@ class DubbingAPI:
         master_audio = np.zeros((total_samples, 2), dtype=np.int16)
 
         total_segs = len(segments)
+
+        # Human Vocal Studio Mastering Chain Configuration
+        pitch_val = "+0Hz"
+        vocal_filters = []
+        if vocal_enhancer == "studio_human":
+            pitch_val = "-1Hz"
+            vocal_filters = [
+                "highpass=f=75",
+                "equalizer=f=200:t=q:w=1.2:g=3.5",
+                "equalizer=f=3300:t=q:w=1.5:g=2.5",
+                "equalizer=f=7200:t=q:w=2.0:g=-2.5",
+                "acompressor=threshold=-16dB:ratio=3.0:attack=10:release=60"
+            ]
+        elif vocal_enhancer == "dramatic_movie":
+            pitch_val = "-3Hz"  # Deeper cinematic authority
+            vocal_filters = [
+                "highpass=f=70",
+                "equalizer=f=180:t=q:w=1.2:g=4.5",
+                "equalizer=f=3500:t=q:w=1.5:g=3.0",
+                "equalizer=f=7500:t=q:w=2.0:g=-2.0",
+                "acompressor=threshold=-18dB:ratio=3.5:attack=8:release=50",
+                "aecho=0.8:0.88:25:0.12"
+            ]
+        elif vocal_enhancer == "warm_storyteller":
+            pitch_val = "+0Hz"
+            vocal_filters = [
+                "highpass=f=85",
+                "equalizer=f=240:t=q:w=1.4:g=3.0",
+                "equalizer=f=3000:t=q:w=1.5:g=2.0",
+                "lowpass=f=9500",
+                "acompressor=threshold=-20dB:ratio=2.5:attack=15:release=80"
+            ]
+
+        def _humanize_khmer_script(text: str) -> str:
+            # Inserts subtle breathing pauses at sentence boundaries
+            t = re.sub(r'([។!?])\s*', r'\1 , ', text)
+            t = re.sub(r',\s*,+', ', ', t)
+            return t.strip()
 
         for idx, seg in enumerate(segments):
             if self._is_aborted:
@@ -1532,9 +1579,13 @@ class DubbingAPI:
             mp3_path = os.path.join(tts_dir, f"seg_{idx:04d}.mp3")
             wav_path = os.path.join(tts_dir, f"seg_{idx:04d}.wav")
 
+            speech_input = _humanize_khmer_script(km_text) if vocal_enhancer != "raw" else km_text
+
             # Asynchronously synthesize mp3 via edge-tts with automatic retry
             async def _synthesize():
-                communicate = edge_tts.Communicate(km_text, voice=voice, rate=rate, proxy=edge_proxy)
+                communicate = edge_tts.Communicate(
+                    speech_input, voice=voice, rate=rate, pitch=pitch_val, proxy=edge_proxy
+                )
                 await communicate.save(mp3_path)
 
             success = False
@@ -1567,18 +1618,23 @@ class DubbingAPI:
             target_dur = max(0.5, float(seg.get("end", 0.0)) - float(seg.get("start", 0.0)))
             tts_dur = get_media_duration(mp3_path, self._ffmpeg_path)
 
-            filter_args = []
+            all_filters = []
             if tts_dur > 0:
                 speed_ratio = tts_dur / target_dur
                 # Clamp to natural human speech bounds (0.85x to 1.35x) so audio sounds completely natural
                 if speed_ratio > 1.08:
                     atempo = min(1.35, speed_ratio)
-                    filter_args = ["-filter:a", f"atempo={atempo:.3f}"]
+                    all_filters.append(f"atempo={atempo:.3f}")
                 elif speed_ratio < 0.92:
                     atempo = max(0.88, speed_ratio)
-                    filter_args = ["-filter:a", f"atempo={atempo:.3f}"]
+                    all_filters.append(f"atempo={atempo:.3f}")
 
-            # Convert segment mp3 to 48kHz stereo WAV with dynamic duration matching
+            if vocal_filters:
+                all_filters.extend(vocal_filters)
+
+            filter_args = ["-filter:a", ",".join(all_filters)] if all_filters else []
+
+            # Convert segment mp3 to 48kHz stereo WAV with dynamic duration matching + vocal mastering
             convert_cmd = [
                 self._ffmpeg_path, "-y",
                 "-i", mp3_path,
