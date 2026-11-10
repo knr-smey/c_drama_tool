@@ -448,6 +448,78 @@ class DubbingAPI:
         except Exception as e:
             return {"error": str(e)}
 
+    def search_movies(self, query: str, limit: int = 8, proxy: str = None) -> dict:
+        """Searches online dramas and movies from the web using yt-dlp."""
+        query = (query or "").strip()
+        if not query:
+            return {"results": [], "count": 0}
+
+        try:
+            import yt_dlp
+            configured_proxy = proxy or os.environ.get("HTTP_PROXY") or os.environ.get("HTTPS_PROXY")
+            if not configured_proxy:
+                for auto_p in get_configured_proxies():
+                    if auto_p:
+                        configured_proxy = auto_p
+                        break
+
+            ydl_opts = {
+                "extract_flat": True,
+                "skip_download": True,
+                "quiet": True,
+                "no_warnings": True,
+                "noplaylist": True,
+                "socket_timeout": 15
+            }
+            if configured_proxy:
+                ydl_opts["proxy"] = configured_proxy
+
+            search_limit = min(max(int(limit), 1), 20)
+            search_target = f"ytsearch{search_limit}:{query}"
+
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(search_target, download=False)
+                entries = info.get("entries", []) if info else []
+
+                results = []
+                for e in entries:
+                    if not e:
+                        continue
+                    vid_id = e.get("id") or ""
+                    raw_dur = e.get("duration")
+                    if raw_dur:
+                        try:
+                            m, s = divmod(int(raw_dur), 60)
+                            h, m = divmod(m, 60)
+                            dur_str = f"{h}:{m:02d}:{s:02d}" if h > 0 else f"{m}:{s:02d}"
+                        except Exception:
+                            dur_str = str(raw_dur)
+                    else:
+                        dur_str = "Video"
+
+                    thumb = e.get("thumbnail")
+                    if not thumb and e.get("thumbnails"):
+                        thumb = e["thumbnails"][-1].get("url")
+                    if not thumb and vid_id:
+                        thumb = f"https://i.ytimg.com/vi/{vid_id}/hqdefault.jpg"
+
+                    video_url = e.get("url") or (f"https://www.youtube.com/watch?v={vid_id}" if vid_id else "")
+                    if not video_url.startswith("http"):
+                        video_url = f"https://www.youtube.com/watch?v={video_url}"
+
+                    results.append({
+                        "id": vid_id,
+                        "title": e.get("title") or "Untitled Video",
+                        "url": video_url,
+                        "thumbnail": thumb or "",
+                        "duration": dur_str,
+                        "uploader": e.get("uploader") or e.get("channel") or "Online"
+                    })
+
+                return {"results": results, "count": len(results)}
+        except Exception as e:
+            return {"error": str(e), "results": []}
+
     def close_app(self) -> dict:
         """Force quits the desktop application immediately."""
         def _force_exit():

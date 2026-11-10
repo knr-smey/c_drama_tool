@@ -84,6 +84,15 @@ def cancel_pipeline():
     return jsonify(api.cancel_pipeline())
 
 
+@app.post("/api/search_movies")
+def search_movies():
+    data = request.get_json(silent=True) or {}
+    query = data.get("query", "")
+    limit = data.get("limit", 8)
+    proxy = data.get("proxy", "")
+    return jsonify(api.search_movies(query, limit, proxy))
+
+
 @app.post("/api/open_output_folder")
 def open_output_folder():
     return jsonify(

@@ -101,6 +101,14 @@
     <!-- Right Header Actions -->
     <div class="flex items-center gap-2">
       <button 
+        onclick="openMovieSearchModal()" 
+        class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-black bg-editor-orange hover:bg-editor-orangeHover rounded-lg transition-all shadow-sm shadow-orange-500/20" 
+        title="Search Online Dramas & Movies">
+        <i data-lucide="search" class="w-3.5 h-3.5 stroke-[2.5]"></i>
+        <span>Search Drama</span>
+      </button>
+
+      <button 
         onclick="handleOpenOutputDir()" 
         class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-editor-border hover:border-editor-borderHover rounded-lg transition-all" 
         title="Open Output Folder">
@@ -175,15 +183,30 @@
             </div>
           </div>
 
-          <div class="flex items-center justify-between pt-0.5">
+          <div class="flex items-center justify-between pt-1 border-t border-editor-border/50">
+            <button 
+              type="button" 
+              onclick="openMovieSearchModal()" 
+              class="flex items-center gap-1.5 text-xs font-bold text-editor-orange hover:text-editor-orangeHover transition-colors py-0.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              Find Drama Online
+            </button>
             <button 
               type="button" 
               onclick="handleSelectLocalFile()" 
-              class="flex items-center gap-1.5 text-xs font-medium text-editor-orange hover:text-editor-orangeHover transition-colors py-0.5">
+              class="flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-white transition-colors py-0.5">
               <i data-lucide="folder-open" class="w-3.5 h-3.5"></i>
-              Browse local file (.mp4, .mkv, .mov)
+              Browse file
             </button>
-            <span id="url-validation-badge" class="text-[11px] text-zinc-500 font-mono">Awaiting input</span>
+          </div>
+
+          <!-- Video preview details badge when selected -->
+          <div id="selected-video-meta" class="hidden p-2 rounded-lg bg-zinc-950 border border-editor-orange/30 text-[11px] text-zinc-300 flex items-center justify-between">
+            <div class="flex items-center gap-2 truncate">
+              <i data-lucide="film" class="w-3.5 h-3.5 text-editor-orange shrink-0"></i>
+              <span id="selected-video-title" class="truncate font-semibold text-white">Title</span>
+            </div>
+            <span id="selected-video-dur" class="text-editor-orange shrink-0 font-mono text-[10px] ml-2">00:00</span>
           </div>
         </div>
 
@@ -595,6 +618,89 @@
 
   </main>
 
+  <!-- ========================================== -->
+  <!-- ONLINE DRAMA / MOVIE SEARCH MODAL         -->
+  <!-- ========================================== -->
+  <div id="movie-search-modal" class="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="w-full max-w-3xl bg-editor-panel border border-editor-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh]">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-4 border-b border-editor-border flex items-center justify-between bg-zinc-950/70">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-editor-orange text-black flex items-center justify-center font-bold">
+            <i data-lucide="search" class="w-4 h-4 stroke-[2.5]"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              Search Online Dramas & Movies
+              <span class="text-[10px] font-mono font-bold text-editor-orange bg-orange-500/10 border border-editor-orange/30 px-2 py-0.5 rounded">Scraper AI</span>
+            </h3>
+            <p class="text-[11px] text-zinc-400">Search thousands of Chinese dramas & videos across the web to dub</p>
+          </div>
+        </div>
+        <button onclick="closeMovieSearchModal()" class="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Search Controls & Keywords -->
+      <div class="p-4 border-b border-editor-border bg-editor-card space-y-3">
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1">
+            <input 
+              id="input-movie-search" 
+              type="text" 
+              placeholder="Search Chinese drama, short drama, title or keyword (e.g. 一代名剑, CEO romance)..." 
+              class="w-full bg-editor-black border border-editor-border focus:border-editor-orange text-xs text-white placeholder-zinc-500 rounded-lg pl-9 pr-4 py-2.5 outline-none font-mono"
+              onkeydown="if(event.key === 'Enter') executeMovieSearch()">
+            <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+          </div>
+          <button 
+            id="btn-movie-search"
+            onclick="executeMovieSearch()" 
+            class="px-4 py-2.5 bg-editor-orange hover:bg-editor-orangeHover text-black font-bold text-xs rounded-lg transition-all flex items-center gap-1.5 shrink-0">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 fill-black"></i>
+            <span>Search</span>
+          </button>
+        </div>
+
+        <!-- Preset Quick Recommendation Chips -->
+        <div class="flex items-center gap-1.5 flex-wrap text-[11px]">
+          <span class="text-zinc-500 font-mono text-[10px]">Trending:</span>
+          <button onclick="quickSearchMovie('一代名剑')" class="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-editor-orange border border-editor-border transition-colors">
+            ⚔️ 一代名剑
+          </button>
+          <button onclick="quickSearchMovie('chinese drama short recap')" class="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-editor-orange border border-editor-border transition-colors">
+            🎬 Short Drama (短剧)
+          </button>
+          <button onclick="quickSearchMovie('霸道总裁 short drama')" class="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-editor-orange border border-editor-border transition-colors">
+            👑 CEO Romance
+          </button>
+          <button onclick="quickSearchMovie('wuxia martial arts drama')" class="px-2 py-0.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-editor-orange border border-editor-border transition-colors">
+            🥋 Wuxia Martial Arts
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Results Container -->
+      <div id="movie-search-results" class="flex-1 overflow-y-auto p-4 space-y-3 min-h-[280px]">
+        <div class="h-48 flex flex-col items-center justify-center text-center text-zinc-500 space-y-2">
+          <i data-lucide="film" class="w-8 h-8 text-zinc-600 stroke-[1.5]"></i>
+          <div class="text-xs">Enter keywords or click a trending drama chip to search online.</div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 border-t border-editor-border bg-zinc-950/70 flex items-center justify-between text-[11px] text-zinc-500 font-mono">
+        <span>1-click loads video directly into KhmerDub pipeline</span>
+        <button onclick="closeMovieSearchModal()" class="px-3 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-editor-border">
+          Close
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Hidden file input used by browser mode for uploading local videos -->
   <input type="file" id="file-upload" accept="video/*,.mkv,.mov,.webm,.avi" class="hidden" onchange="handleFileUpload(event)"/>
 
@@ -636,7 +742,8 @@
         open_output_folder: { url: "/api/open_output_folder", body: args[0] ? { path: args[0] } : {} },
         open_video: { url: "/api/open_video", body: { file_path: args[0] } },
         reveal_in_folder: { url: "/api/reveal_in_folder", body: { file_path: args[0] } },
-        close_app: { url: "/api/close_app" }
+        close_app: { url: "/api/close_app" },
+        search_movies: { url: "/api/search_movies", body: { query: args[0], limit: args[1] || 8, proxy: args[2] || "" } }
       };
       const route = routes[method];
       if (!route) throw new Error(`Unsupported web API method: ${method}`);
@@ -793,6 +900,161 @@
       } catch (err) {
         appendTerminalLog("ERROR", `Upload failed: ${err}`);
       }
+    }
+
+    // ==========================================
+    // Online Drama & Movie Search / Scraper Logic
+    // ==========================================
+    function openMovieSearchModal() {
+      const modal = document.getElementById("movie-search-modal");
+      if (modal) {
+        modal.classList.remove("hidden");
+        const input = document.getElementById("input-movie-search");
+        if (input) {
+          input.focus();
+          if (!input.value.trim()) {
+            quickSearchMovie("chinese drama short");
+          }
+        }
+        lucide.createIcons();
+      }
+    }
+
+    function closeMovieSearchModal() {
+      const modal = document.getElementById("movie-search-modal");
+      if (modal) {
+        modal.classList.add("hidden");
+      }
+    }
+
+    function quickSearchMovie(keyword) {
+      const input = document.getElementById("input-movie-search");
+      if (input) {
+        input.value = keyword;
+        executeMovieSearch();
+      }
+    }
+
+    let isSearchingMovies = false;
+    async function executeMovieSearch() {
+      const input = document.getElementById("input-movie-search");
+      const resultsContainer = document.getElementById("movie-search-results");
+      const query = input ? input.value.trim() : "";
+      if (!query || isSearchingMovies) return;
+
+      isSearchingMovies = true;
+      const proxyInput = document.getElementById("input-proxy") ? document.getElementById("input-proxy").value.trim() : "";
+
+      resultsContainer.innerHTML = `
+        <div class="h-52 flex flex-col items-center justify-center text-center space-y-3">
+          <div class="w-8 h-8 rounded-full border-2 border-editor-orange border-t-transparent animate-spin"></div>
+          <div class="text-xs font-mono text-zinc-300">Searching and scraping online dramas for <span class="text-editor-orange font-bold">"${escapeHtml(query)}"</span>...</div>
+          <div class="text-[11px] text-zinc-500">Extracting stream metadata, titles & duration</div>
+        </div>
+      `;
+
+      try {
+        const resp = await invokeApi("search_movies", query, 8, proxyInput);
+        if (resp && resp.error) {
+          resultsContainer.innerHTML = `
+            <div class="h-44 flex flex-col items-center justify-center text-center text-zinc-400 space-y-2 p-4">
+              <i data-lucide="alert-circle" class="w-8 h-8 text-editor-orange stroke-[1.5]"></i>
+              <div class="text-xs text-zinc-200 font-semibold">Search request failed</div>
+              <div class="text-[11px] text-zinc-500 max-w-md font-mono">${escapeHtml(resp.error)}</div>
+            </div>
+          `;
+          lucide.createIcons();
+          return;
+        }
+
+        const items = (resp && resp.results) || [];
+        if (items.length === 0) {
+          resultsContainer.innerHTML = `
+            <div class="h-44 flex flex-col items-center justify-center text-center text-zinc-500 space-y-2">
+              <i data-lucide="film" class="w-8 h-8 text-zinc-600 stroke-[1.5]"></i>
+              <div class="text-xs font-medium text-zinc-300">No drama videos found for "${escapeHtml(query)}"</div>
+              <div class="text-[11px] text-zinc-500">Try keywords like "short drama", "一代名剑", or "chinese drama"</div>
+            </div>
+          `;
+          lucide.createIcons();
+          return;
+        }
+
+        let html = `<div class="grid grid-cols-1 md:grid-cols-2 gap-3">`;
+        for (const item of items) {
+          const safeTitle = escapeHtml(item.title);
+          const safeUrl = item.url.replace(/"/g, '&quot;');
+          const safeDur = escapeHtml(item.duration);
+          const safeUploader = escapeHtml(item.uploader);
+          const safeThumb = item.thumbnail || `https://i.ytimg.com/vi/${item.id}/hqdefault.jpg`;
+
+          html += `
+            <div class="p-2.5 rounded-xl border border-editor-border bg-zinc-950/90 hover:border-editor-orange/80 transition-all flex flex-col justify-between space-y-2.5 group">
+              <div class="flex gap-3">
+                <div class="relative w-32 h-20 bg-zinc-900 rounded-lg overflow-hidden shrink-0 border border-editor-border">
+                  <img src="${safeThumb}" alt="${safeTitle}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onerror="this.src='https://placehold.co/320x180/18181b/ff6b00?text=Drama'">
+                  <span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/85 text-[9px] font-mono font-bold text-white">${safeDur}</span>
+                </div>
+                <div class="flex-1 min-w-0 flex flex-col justify-between">
+                  <div>
+                    <h4 class="text-xs font-bold text-white line-clamp-2 leading-snug group-hover:text-editor-orange transition-colors" title="${safeTitle}">
+                      ${safeTitle}
+                    </h4>
+                    <div class="text-[10px] text-zinc-400 mt-1 flex items-center gap-1 font-mono">
+                      <i data-lucide="user" class="w-2.5 h-2.5 text-editor-orange"></i>
+                      <span class="truncate">${safeUploader}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-1.5 border-t border-editor-border/60 flex items-center justify-between">
+                <span class="text-[10px] font-mono text-zinc-500 truncate max-w-[150px]">${item.id}</span>
+                <button 
+                  onclick='selectMovieResult("${safeUrl}", "${safeTitle.replace(/'/g, "\\'")}", "${safeDur}")' 
+                  class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-editor-orange hover:bg-editor-orangeHover text-black transition-all flex items-center gap-1 shadow-sm shadow-orange-500/20">
+                  <i data-lucide="check" class="w-3 h-3 stroke-[3]"></i>
+                  <span>Use Video</span>
+                </button>
+              </div>
+            </div>
+          `;
+        }
+        html += `</div>`;
+        resultsContainer.innerHTML = html;
+        lucide.createIcons();
+      } catch (err) {
+        resultsContainer.innerHTML = `
+          <div class="h-44 flex flex-col items-center justify-center text-center text-zinc-400 space-y-2 p-4">
+            <i data-lucide="alert-triangle" class="w-8 h-8 text-editor-orange stroke-[1.5]"></i>
+            <div class="text-xs text-zinc-200 font-semibold">Search encountered an error</div>
+            <div class="text-[11px] text-zinc-500 max-w-md font-mono">${escapeHtml(err.message || String(err))}</div>
+          </div>
+        `;
+        lucide.createIcons();
+      } finally {
+        isSearchingMovies = false;
+      }
+    }
+
+    function selectMovieResult(url, title, duration) {
+      const input = document.getElementById("input-url");
+      if (input) {
+        input.value = url;
+        validateInput();
+      }
+
+      const metaCard = document.getElementById("selected-video-meta");
+      const metaTitle = document.getElementById("selected-video-title");
+      const metaDur = document.getElementById("selected-video-dur");
+      if (metaCard && metaTitle && metaDur) {
+        metaTitle.textContent = title;
+        metaDur.textContent = duration;
+        metaCard.classList.remove("hidden");
+      }
+
+      closeMovieSearchModal();
+      appendTerminalLog("SUCCESS", `Loaded online video: "${title}" [${duration}]. Ready to dub!`);
     }
 
     // Open Output Directory
