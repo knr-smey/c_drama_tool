@@ -313,7 +313,7 @@ export default function Home() {
     appendLog(
       'SUCCESS',
       `Loaded "${movie.title}" [${movie.duration}] into Editor for ${
-        preferredMode === 'recap' ? 'Drama Recap (សង្ខេបរឿង)' : 'Direct Dubbing'
+        preferredMode === 'recap' ? 'Drama Recap' : 'Direct Dubbing'
       }.`
     );
   };
@@ -409,7 +409,7 @@ export default function Home() {
                       <Play className="w-4 h-4 fill-black text-black" />
                       <span>
                         {productionMode === 'recap'
-                          ? 'Generate Drama Recap (សង្ខេបរឿង)'
+                          ? 'Generate Drama Recap'
                           : 'Start Dubbing Pipeline'}
                       </span>
                     </>

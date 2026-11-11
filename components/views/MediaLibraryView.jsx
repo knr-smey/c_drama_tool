@@ -48,7 +48,7 @@ export default function MediaLibraryView({
             </span>
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Browse and manage all finished Khmer-dubbed movies and drama recaps.
+            Browse and manage all finished dubbed movies and drama recaps.
           </p>
         </div>
 

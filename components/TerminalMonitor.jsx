@@ -89,7 +89,7 @@ export default function TerminalMonitor({
                 <span className="text-zinc-200">{item.message}</span>
                 {item.khmerText && (
                   <div className="mt-1 ml-3 text-white font-sans text-xs bg-editor-card px-2.5 py-1.5 rounded border border-editor-orange/40">
-                    ➔ ភាសាខ្មែរ: {item.khmerText}
+                    ➔ Voiceover / Dub Script: {item.khmerText}
                   </div>
                 )}
               </div>

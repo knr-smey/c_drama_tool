@@ -72,7 +72,7 @@ export default function VoiceSelection({
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold text-white flex items-center gap-1">
             <Radio className="w-3 h-3 text-editor-orange" />
-            Human Realism Engine / សំឡេងមនុស្សពិត
+            Human Vocal Realism Engine
           </span>
           <span className="text-[9px] font-mono font-bold text-editor-orange bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/20">
             Studio Pro

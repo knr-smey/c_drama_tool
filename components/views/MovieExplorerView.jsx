@@ -71,7 +71,7 @@ export default function MovieExplorerView({
             </span>
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            Search, discover, and scrape Chinese dramas or web series to dub into Khmer with 1 click.
+            Search, discover, and scrape online dramas and movies to dub or narrate with 1 click.
           </p>
         </div>
 
@@ -199,7 +199,7 @@ export default function MovieExplorerView({
                     className="py-1.5 px-2 rounded-lg text-[11px] font-bold bg-editor-orange hover:bg-editor-orangeHover text-black transition-all flex items-center justify-center gap-1 shadow-sm shadow-orange-500/20"
                   >
                     <Check className="w-3 h-3 stroke-[3]" />
-                    <span>Recap (សង្ខេប)</span>
+                    <span>Recap Movie</span>
                   </button>
 
                   <button

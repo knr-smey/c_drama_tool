@@ -971,7 +971,7 @@ class DubbingAPI:
             stage=4,
             stage_name="Story Recap Analysis",
             progress=42.0,
-            message="Analyzing drama plot & generating Khmer story recap (សង្ខេបរឿង)...",
+            message="Analyzing drama plot & generating story recap...",
             log_level="INFO",
             log_text="AI Storyteller analyzing full scene context, character conflict, and plot..."
         )
@@ -1113,7 +1113,7 @@ class DubbingAPI:
                 progress=60.0,
                 message=f"Drama recap script created ({len(recap_segments)} storytelling scenes).",
                 log_level="SUCCESS",
-                log_text=f"Successfully generated {len(recap_segments)} Khmer movie recap (សង្ខេបរឿង) narration scenes."
+                log_text=f"Successfully generated {len(recap_segments)} movie recap narration scenes."
             )
             # Log the story lines for the user in the execution terminal!
             for s in recap_segments:
@@ -1123,7 +1123,7 @@ class DubbingAPI:
                     progress=60.0,
                     message="Recap story narration prepared",
                     log_level="TRANSLATE",
-                    log_text=f"[{format_timestamp(s['start'])} -> {format_timestamp(s['end'])}] និទាន: {s['km_text']}",
+                    log_text=f"[{format_timestamp(s['start'])} -> {format_timestamp(s['end'])}] Scene: {s['km_text']}",
                     khmer_text=s["km_text"]
                 )
             return recap_segments

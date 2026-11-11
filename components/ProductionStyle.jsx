@@ -9,7 +9,7 @@ export default function ProductionStyle({ mode, setMode }) {
       <div className="flex items-center justify-between">
         <label className="block text-xs font-semibold text-white flex items-center gap-1.5">
           <Clapperboard className="w-3.5 h-3.5 text-editor-orange" />
-          Production Style / ទម្រង់ផលិត
+          Production Style
         </label>
         <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-orange-500/10 text-editor-orange border border-editor-orange/30 rounded">
           Mode
@@ -28,13 +28,13 @@ export default function ProductionStyle({ mode, setMode }) {
         >
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-bold text-white flex items-center gap-1">
-              🎬 សង្ខេបរឿង
+              🎬 Drama Recap
             </span>
             <span className="px-1.5 py-0.5 text-[9px] font-bold bg-editor-orange text-black rounded font-mono">
               RECAP
             </span>
           </div>
-          <div className="font-bold text-xs text-white">Drama Recap</div>
+          <div className="font-bold text-xs text-white">Story Recap & Narrator</div>
           <div className="text-[10px] text-zinc-400 mt-0.5 leading-tight">
             AI narrates the plot with background SFX/music ducking
           </div>
@@ -51,13 +51,13 @@ export default function ProductionStyle({ mode, setMode }) {
         >
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-bold text-zinc-300 flex items-center gap-1">
-              🎙️ បញ្ចូលសំឡេង
+              🎙️ Direct Dubbing
             </span>
             <span className="px-1.5 py-0.5 text-[9px] font-medium bg-zinc-800 text-zinc-400 rounded font-mono">
               1:1
             </span>
           </div>
-          <div className="font-bold text-xs text-white">Direct Dubbing</div>
+          <div className="font-bold text-xs text-white">Dialogue Replacement</div>
           <div className="text-[10px] text-zinc-400 mt-0.5 leading-tight">
             Line-by-line speech with sentence lip-sync matching
           </div>

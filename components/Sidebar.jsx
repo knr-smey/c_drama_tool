@@ -23,26 +23,26 @@ export default function Sidebar({
     {
       id: 'editor',
       label: 'Studio Editor',
-      sub: 'ស្ទូឌីយោ',
+      sub: 'Dubbing & Recap Studio',
       icon: Film,
     },
     {
       id: 'search',
       label: 'Search Dramas',
-      sub: 'ស្វែងរករឿង',
+      sub: 'AI Drama Scraper',
       icon: Search,
       badge: 'Scraper AI',
     },
     {
       id: 'library',
       label: 'Media Library',
-      sub: 'បណ្ណាល័យ',
+      sub: 'Exported Videos',
       icon: FolderArchive,
     },
     {
       id: 'settings',
       label: 'Settings',
-      sub: 'ការកំណត់',
+      sub: 'Preferences & Keys',
       icon: Settings,
     },
   ];
