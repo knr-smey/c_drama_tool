@@ -5,11 +5,11 @@ import { Clapperboard } from 'lucide-react';
 
 export default function ProductionStyle({ mode, setMode }) {
   return (
-    <div className="bg-editor-card border border-editor-border rounded-xl p-3.5 space-y-2.5">
+    <div className="bg-editor-card border border-editor-border rounded-xl p-3 space-y-2">
       <div className="flex items-center justify-between">
-        <label className="block text-xs font-semibold text-white flex items-center gap-1.5">
+        <label className="text-xs font-semibold text-white flex items-center gap-1.5">
           <Clapperboard className="w-3.5 h-3.5 text-editor-orange" />
-          Production Style
+          Style
         </label>
         <span className="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-orange-500/10 text-editor-orange border border-editor-orange/30 rounded">
           Mode
@@ -17,51 +17,31 @@ export default function ProductionStyle({ mode, setMode }) {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        {/* Mode 1: Drama Recap & Storyteller */}
-        <div
+        <button
+          type="button"
           onClick={() => setMode('recap')}
-          className={`mode-card relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all ${
+          className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all ${
             mode === 'recap'
-              ? 'border-editor-orange bg-editor-orangeDim shadow-sm shadow-orange-500/10'
-              : 'border-editor-border bg-zinc-900/60 hover:border-editor-borderHover'
+              ? 'border-editor-orange bg-editor-orangeDim text-white font-bold'
+              : 'border-editor-border bg-zinc-900/60 text-zinc-400 hover:border-editor-borderHover'
           }`}
         >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-bold text-white flex items-center gap-1">
-              🎬 Drama Recap
-            </span>
-            <span className="px-1.5 py-0.5 text-[9px] font-bold bg-editor-orange text-black rounded font-mono">
-              RECAP
-            </span>
-          </div>
-          <div className="font-bold text-xs text-white">Story Recap & Narrator</div>
-          <div className="text-[10px] text-zinc-400 mt-0.5 leading-tight">
-            AI narrates the plot with background SFX/music ducking
-          </div>
-        </div>
+          <span className="text-xs">🎬 Recap</span>
+          <span className="px-1 py-0.5 text-[9px] font-mono rounded bg-editor-orange text-black font-bold">AI</span>
+        </button>
 
-        {/* Mode 2: Direct Dialogue Dubbing */}
-        <div
+        <button
+          type="button"
           onClick={() => setMode('direct')}
-          className={`mode-card relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all ${
+          className={`flex items-center justify-between p-2.5 rounded-lg border text-left transition-all ${
             mode === 'direct'
-              ? 'border-editor-orange bg-editor-orangeDim shadow-sm shadow-orange-500/10'
-              : 'border-editor-border bg-zinc-900/60 hover:border-editor-borderHover'
+              ? 'border-editor-orange bg-editor-orangeDim text-white font-bold'
+              : 'border-editor-border bg-zinc-900/60 text-zinc-400 hover:border-editor-borderHover'
           }`}
         >
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-bold text-zinc-300 flex items-center gap-1">
-              🎙️ Direct Dubbing
-            </span>
-            <span className="px-1.5 py-0.5 text-[9px] font-medium bg-zinc-800 text-zinc-400 rounded font-mono">
-              1:1
-            </span>
-          </div>
-          <div className="font-bold text-xs text-white">Dialogue Replacement</div>
-          <div className="text-[10px] text-zinc-400 mt-0.5 leading-tight">
-            Line-by-line speech with sentence lip-sync matching
-          </div>
-        </div>
+          <span className="text-xs">🎙️ Dubbing</span>
+          <span className="px-1 py-0.5 text-[9px] font-mono rounded bg-zinc-800 text-zinc-400 font-medium">1:1</span>
+        </button>
       </div>
     </div>
   );

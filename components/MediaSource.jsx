@@ -40,9 +40,8 @@ export default function MediaSource({
       <label className="block text-xs font-semibold text-white flex items-center justify-between">
         <span className="flex items-center gap-1.5">
           <Film className="w-3.5 h-3.5 text-editor-orange" />
-          Media Source
+          Source
         </span>
-        <span className="text-[10px] text-zinc-500">YouTube or Local Video</span>
       </label>
 
       {/* Input container with Paste button */}
@@ -51,8 +50,8 @@ export default function MediaSource({
           type="text"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          placeholder="Paste URL or drag & drop video file..."
-          className="w-full bg-editor-input border border-editor-border focus:border-editor-orange text-xs text-white placeholder-zinc-600 rounded-lg pl-3 pr-16 py-2.5 outline-none transition-all font-mono"
+          placeholder="Video URL or file path..."
+          className="w-full bg-editor-input border border-editor-border focus:border-editor-orange text-xs text-white placeholder-zinc-600 rounded-lg pl-3 pr-16 py-2 outline-none transition-all font-mono"
         />
         <div className="absolute right-1.5 flex items-center gap-1">
           <button

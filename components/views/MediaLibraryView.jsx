@@ -38,19 +38,14 @@ export default function MediaLibraryView({
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-editor-black p-6 space-y-5">
       {/* View Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-editor-border">
-        <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <FolderArchive className="w-5 h-5 text-editor-orange" />
-            Media Library & Exported Projects
-            <span className="text-[10px] font-mono font-bold bg-zinc-900 border border-editor-border text-zinc-300 px-2 py-0.5 rounded">
-              ./output
-            </span>
-          </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
-            Browse and manage all finished dubbed movies and drama recaps.
-          </p>
-        </div>
+      <div className="flex items-center justify-between pb-3 border-b border-editor-border">
+        <h2 className="text-sm font-bold text-white flex items-center gap-2">
+          <FolderArchive className="w-4 h-4 text-editor-orange" />
+          Library
+          <span className="text-[10px] font-mono text-zinc-400 bg-zinc-900 border border-editor-border px-2 py-0.5 rounded">
+            ./output
+          </span>
+        </h2>
 
         <div className="flex items-center gap-2">
           <button

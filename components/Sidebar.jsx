@@ -20,60 +20,32 @@ export default function Sidebar({
   onQuit
 }) {
   const NAV_ITEMS = [
-    {
-      id: 'editor',
-      label: 'Studio Editor',
-      sub: 'Dubbing & Recap Studio',
-      icon: Film,
-    },
-    {
-      id: 'search',
-      label: 'Search Dramas',
-      sub: 'AI Drama Scraper',
-      icon: Search,
-      badge: 'Scraper AI',
-    },
-    {
-      id: 'library',
-      label: 'Media Library',
-      sub: 'Exported Videos',
-      icon: FolderArchive,
-    },
-    {
-      id: 'settings',
-      label: 'Settings',
-      sub: 'Preferences & Keys',
-      icon: Settings,
-    },
+    { id: 'editor', label: 'Editor', icon: Film },
+    { id: 'search', label: 'Search', icon: Search },
+    { id: 'library', label: 'Library', icon: FolderArchive },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (
-    <aside className="w-64 bg-editor-panel border-r border-editor-border flex flex-col justify-between shrink-0 select-none z-30">
+    <aside className="w-52 bg-editor-panel border-r border-editor-border flex flex-col justify-between shrink-0 select-none z-30">
       {/* Top Branding Section */}
       <div>
-        <div className="h-14 border-b border-editor-border px-5 flex items-center gap-3 bg-zinc-950/40">
-          <div className="w-8 h-8 rounded-lg bg-editor-orange text-black flex items-center justify-center font-bold shadow-md shadow-orange-500/20">
-            <Scissors className="w-4 h-4 stroke-[2.5]" />
+        <div className="h-14 border-b border-editor-border px-4 flex items-center gap-2.5 bg-zinc-950/40">
+          <div className="w-7 h-7 rounded-lg bg-editor-orange text-black flex items-center justify-center font-bold shadow-md shadow-orange-500/20">
+            <Scissors className="w-3.5 h-3.5 stroke-[2.5]" />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold tracking-tight text-white">
+              <span className="text-xs font-bold tracking-tight text-white">
                 KhmerDub<span className="text-editor-orange font-extrabold">Studio</span>
               </span>
-              <span className="px-1 py-0.2 text-[9px] font-mono font-bold bg-zinc-900 text-zinc-400 border border-editor-border rounded">
-                v1.0
-              </span>
             </div>
-            <div className="text-[10px] text-zinc-500 font-mono">Next.js Studio Pro</div>
+            <div className="text-[9px] text-zinc-500 font-mono">Pro Editor</div>
           </div>
         </div>
 
         {/* Navigation Menu */}
-        <div className="p-3 space-y-1">
-          <div className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-zinc-500">
-            Navigation
-          </div>
-
+        <div className="p-2.5 space-y-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -82,41 +54,18 @@ export default function Sidebar({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all group ${
                   isActive
                     ? 'bg-editor-orange text-black shadow-md shadow-orange-500/20 font-bold'
                     : 'text-zinc-400 hover:text-white hover:bg-zinc-900/80 border border-transparent hover:border-editor-border'
                 }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <Icon
-                    className={`w-4 h-4 ${
-                      isActive ? 'text-black stroke-[2.5]' : 'text-editor-orange group-hover:scale-110 transition-transform'
-                    }`}
-                  />
-                  <div className="text-left">
-                    <div className="leading-none">{item.label}</div>
-                    <div
-                      className={`text-[9px] mt-1 font-normal ${
-                        isActive ? 'text-black/80' : 'text-zinc-500'
-                      }`}
-                    >
-                      {item.sub}
-                    </div>
-                  </div>
-                </div>
-
-                {item.badge && (
-                  <span
-                    className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold ${
-                      isActive
-                        ? 'bg-black text-editor-orange'
-                        : 'bg-orange-500/10 text-editor-orange border border-editor-orange/30'
-                    }`}
-                  >
-                    {item.badge}
-                  </span>
-                )}
+                <Icon
+                  className={`w-4 h-4 ${
+                    isActive ? 'text-black stroke-[2.5]' : 'text-editor-orange group-hover:scale-110 transition-transform'
+                  }`}
+                />
+                <span className="leading-none">{item.label}</span>
               </button>
             );
           })}
