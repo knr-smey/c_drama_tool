@@ -138,10 +138,194 @@
   <!-- ========================================== -->
   <main class="flex-1 flex overflow-hidden bg-editor-black">
 
-    <!-- ========================================== -->
-    <!-- LEFT PANEL: Inspector / Parameters (420px)-->
-    <!-- ========================================== -->
-    <aside class="w-[420px] border-r border-editor-border bg-editor-panel flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-5">
+    <!-- RIGHT PANEL -> LEFT CANVAS -->
+    <section class="flex-1 flex flex-col overflow-hidden bg-editor-black p-5 space-y-4">
+
+      <!-- Top Section: Editor Pipeline Timeline Track -->
+      <div class="bg-editor-panel border border-editor-border rounded-xl p-4 shadow-xl space-y-3.5">
+        
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-editor-orange"></span>
+            <span class="text-xs font-bold uppercase tracking-wider text-white">Pipeline Timeline</span>
+            <span class="text-zinc-600">•</span>
+            <span id="stage-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-900 text-zinc-300 border border-editor-border">Idle</span>
+            <span id="stage-headline" class="text-zinc-400 text-xs">Ready to initialize dubbing pipeline</span>
+          </div>
+          <div class="text-right">
+            <span id="progress-percentage" class="text-2xl font-black tracking-tight text-editor-orange font-mono">0%</span>
+          </div>
+        </div>
+
+        <!-- Main Clean Orange Progress Bar -->
+        <div class="w-full h-2.5 bg-editor-black rounded-full overflow-hidden p-0.5 border border-editor-border">
+          <div 
+            id="main-progress-bar" 
+            class="h-full rounded-full bg-editor-orange transition-all duration-300 ease-out shadow-md shadow-orange-500/30" 
+            style="width: 0%;">
+          </div>
+        </div>
+
+        <!-- 6 Step Timeline Track Cards -->
+        <div class="grid grid-cols-6 gap-2 pt-0.5">
+          
+          <!-- Step 1: Ingestion -->
+          <div id="step-card-1" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">01</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
+              </span>
+            </div>
+            <div class="text-xs font-bold text-white">Ingestion</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">yt-dlp stream</div>
+          </div>
+
+          <!-- Step 2: Extraction -->
+          <div id="step-card-2" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">02</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
+              </span>
+            </div>
+            <div class="text-xs font-bold text-white">Extraction</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">16kHz WAV</div>
+          </div>
+
+          <!-- Step 3: Transcription -->
+          <div id="step-card-3" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">03</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
+              </span>
+            </div>
+            <div class="text-xs font-bold text-white">Transcribe</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">faster-whisper</div>
+          </div>
+
+          <!-- Step 4: Translation -->
+          <div id="step-card-4" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">04</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
+              </span>
+            </div>
+            <div class="text-xs font-bold text-white">Translate</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">Khmer (km)</div>
+          </div>
+
+          <!-- Step 5: Synthesis -->
+          <div id="step-card-5" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">05</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
+              </span>
+            </div>
+            <div class="text-xs font-bold text-white">Voiceover</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">edge-tts Khmer</div>
+          </div>
+
+          <!-- Step 6: Remux -->
+          <div id="step-card-6" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">06</span>
+              <span class="step-status text-zinc-600">
+                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
+              </span>
+            </div>
+            <div class="text-xs font-bold text-white">Remux</div>
+            <div class="text-[10px] text-zinc-500 font-mono truncate">ffmpeg render</div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Success Notification Banner (Revealed on Completion) -->
+      <div id="success-banner" class="hidden bg-editor-panel border border-editor-orange rounded-xl p-4 shadow-xl transition-all">
+        <div class="flex items-start justify-between">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-lg bg-editor-orange text-black flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="check" class="w-6 h-6 stroke-[3]"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                Dubbing Pipeline Complete!
+                <span class="px-2 py-0.5 text-[10px] bg-orange-500/20 text-editor-orange rounded font-mono" id="success-time">Finished</span>
+              </h3>
+              <p class="text-xs text-zinc-300 mt-1 font-mono break-all" id="success-filepath">-</p>
+              <div class="flex items-center gap-3 mt-2 text-[11px] text-zinc-400 font-mono">
+                <span id="success-filesize">Size: 0 MB</span>
+                <span class="text-zinc-600">•</span>
+                <span id="success-duration">Duration: 00:00</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button 
+              onclick="handlePlayVideo()" 
+              class="px-3.5 py-2 rounded-lg text-xs font-bold bg-editor-orange hover:bg-editor-orangeHover text-black flex items-center gap-1.5 shadow-md shadow-orange-500/20 transition-all">
+              <i data-lucide="play" class="w-3.5 h-3.5 fill-black"></i>
+              Play Video
+            </button>
+            <button 
+              onclick="handleRevealFile()" 
+              class="px-3.5 py-2 rounded-lg text-xs font-bold bg-zinc-900 hover:bg-zinc-800 text-white border border-editor-border hover:border-editor-borderHover flex items-center gap-1.5 transition-all">
+              <i data-lucide="folder" class="w-3.5 h-3.5 text-editor-orange"></i>
+              Show in Folder
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Section: Studio Terminal Console Output -->
+      <div class="flex-1 flex flex-col bg-editor-black border border-editor-border rounded-xl overflow-hidden shadow-2xl">
+        
+        <!-- Terminal Header Bar -->
+        <div class="h-9 bg-editor-panel border-b border-editor-border px-4 flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-2">
+            <!-- Studio Minimalist Dots -->
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-zinc-800"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-editor-orange"></span>
+            </div>
+            <span class="text-[11px] font-mono text-zinc-300 ml-2 flex items-center gap-1.5">
+              <i data-lucide="terminal" class="w-3.5 h-3.5 text-editor-orange"></i>
+              Output Monitor
+            </span>
+          </div>
+
+          <div class="flex items-center gap-3 font-mono">
+            <label class="flex items-center gap-1.5 text-[10px] text-zinc-400 cursor-pointer select-none">
+              <input type="checkbox" id="chk-autoscroll" checked class="accent-orange-500">
+              Auto-scroll
+            </label>
+            <button 
+              onclick="copyTerminalLogs()" 
+              class="text-[10px] text-zinc-400 hover:text-white flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-zinc-800 transition-colors">
+              <i data-lucide="copy" class="w-3 h-3"></i>
+              Copy Logs
+            </button>
+          </div>
+        </div>
+
+        <!-- Terminal Logs Window Body -->
+        <div id="terminal-body" class="flex-1 p-4 font-mono text-xs overflow-y-auto space-y-1.5 leading-relaxed bg-editor-black text-zinc-300">
+          <div class="text-zinc-500 italic">
+            [System initialized] KhmerDubStudio ready. Enter a video URL or select a local video to begin.
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- LEFT PANEL -> RIGHT INSPECTOR -->
+    <aside class="w-[420px] border-l border-editor-border bg-editor-panel flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-5">
       
       <div class="space-y-4">
         <!-- Panel Section Title -->
@@ -406,194 +590,6 @@
       </div>
 
     </aside>
-
-    <!-- ========================================== -->
-    <!-- RIGHT PANEL: Editor Timeline & Monitor    -->
-    <!-- ========================================== -->
-    <section class="flex-1 flex flex-col overflow-hidden bg-editor-black p-5 space-y-4">
-
-      <!-- Top Section: Editor Pipeline Timeline Track -->
-      <div class="bg-editor-panel border border-editor-border rounded-xl p-4 shadow-xl space-y-3.5">
-        
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-editor-orange"></span>
-            <span class="text-xs font-bold uppercase tracking-wider text-white">Pipeline Timeline</span>
-            <span class="text-zinc-600">•</span>
-            <span id="stage-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-900 text-zinc-300 border border-editor-border">Idle</span>
-            <span id="stage-headline" class="text-zinc-400 text-xs">Ready to initialize dubbing pipeline</span>
-          </div>
-          <div class="text-right">
-            <span id="progress-percentage" class="text-2xl font-black tracking-tight text-editor-orange font-mono">0%</span>
-          </div>
-        </div>
-
-        <!-- Main Clean Orange Progress Bar -->
-        <div class="w-full h-2.5 bg-editor-black rounded-full overflow-hidden p-0.5 border border-editor-border">
-          <div 
-            id="main-progress-bar" 
-            class="h-full rounded-full bg-editor-orange transition-all duration-300 ease-out shadow-md shadow-orange-500/30" 
-            style="width: 0%;">
-          </div>
-        </div>
-
-        <!-- 6 Step Timeline Track Cards -->
-        <div class="grid grid-cols-6 gap-2 pt-0.5">
-          
-          <!-- Step 1: Ingestion -->
-          <div id="step-card-1" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">01</span>
-              <span class="step-status text-zinc-600">
-                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
-              </span>
-            </div>
-            <div class="text-xs font-bold text-white">Ingestion</div>
-            <div class="text-[10px] text-zinc-500 font-mono truncate">yt-dlp stream</div>
-          </div>
-
-          <!-- Step 2: Extraction -->
-          <div id="step-card-2" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">02</span>
-              <span class="step-status text-zinc-600">
-                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
-              </span>
-            </div>
-            <div class="text-xs font-bold text-white">Extraction</div>
-            <div class="text-[10px] text-zinc-500 font-mono truncate">16kHz WAV</div>
-          </div>
-
-          <!-- Step 3: Transcription -->
-          <div id="step-card-3" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">03</span>
-              <span class="step-status text-zinc-600">
-                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
-              </span>
-            </div>
-            <div class="text-xs font-bold text-white">Transcribe</div>
-            <div class="text-[10px] text-zinc-500 font-mono truncate">faster-whisper</div>
-          </div>
-
-          <!-- Step 4: Translation -->
-          <div id="step-card-4" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">04</span>
-              <span class="step-status text-zinc-600">
-                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
-              </span>
-            </div>
-            <div class="text-xs font-bold text-white">Translate</div>
-            <div class="text-[10px] text-zinc-500 font-mono truncate">Khmer (km)</div>
-          </div>
-
-          <!-- Step 5: Synthesis -->
-          <div id="step-card-5" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">05</span>
-              <span class="step-status text-zinc-600">
-                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
-              </span>
-            </div>
-            <div class="text-xs font-bold text-white">Voiceover</div>
-            <div class="text-[10px] text-zinc-500 font-mono truncate">edge-tts Khmer</div>
-          </div>
-
-          <!-- Step 6: Remux -->
-          <div id="step-card-6" class="step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200">
-            <div class="flex items-center justify-between mb-1">
-              <span class="text-[10px] font-mono font-bold text-zinc-500 step-num">06</span>
-              <span class="step-status text-zinc-600">
-                <i data-lucide="circle-dashed" class="w-3 h-3"></i>
-              </span>
-            </div>
-            <div class="text-xs font-bold text-white">Remux</div>
-            <div class="text-[10px] text-zinc-500 font-mono truncate">ffmpeg render</div>
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- Success Notification Banner (Revealed on Completion) -->
-      <div id="success-banner" class="hidden bg-editor-panel border border-editor-orange rounded-xl p-4 shadow-xl transition-all">
-        <div class="flex items-start justify-between">
-          <div class="flex items-start gap-3">
-            <div class="w-10 h-10 rounded-lg bg-editor-orange text-black flex items-center justify-center shrink-0 mt-0.5">
-              <i data-lucide="check" class="w-6 h-6 stroke-[3]"></i>
-            </div>
-            <div>
-              <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                Dubbing Pipeline Complete!
-                <span class="px-2 py-0.5 text-[10px] bg-orange-500/20 text-editor-orange rounded font-mono" id="success-time">Finished</span>
-              </h3>
-              <p class="text-xs text-zinc-300 mt-1 font-mono break-all" id="success-filepath">-</p>
-              <div class="flex items-center gap-3 mt-2 text-[11px] text-zinc-400 font-mono">
-                <span id="success-filesize">Size: 0 MB</span>
-                <span class="text-zinc-600">•</span>
-                <span id="success-duration">Duration: 00:00</span>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button 
-              onclick="handlePlayVideo()" 
-              class="px-3.5 py-2 rounded-lg text-xs font-bold bg-editor-orange hover:bg-editor-orangeHover text-black flex items-center gap-1.5 shadow-md shadow-orange-500/20 transition-all">
-              <i data-lucide="play" class="w-3.5 h-3.5 fill-black"></i>
-              Play Video
-            </button>
-            <button 
-              onclick="handleRevealFile()" 
-              class="px-3.5 py-2 rounded-lg text-xs font-bold bg-zinc-900 hover:bg-zinc-800 text-white border border-editor-border hover:border-editor-borderHover flex items-center gap-1.5 transition-all">
-              <i data-lucide="folder" class="w-3.5 h-3.5 text-editor-orange"></i>
-              Show in Folder
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Bottom Section: Studio Terminal Console Output -->
-      <div class="flex-1 flex flex-col bg-editor-black border border-editor-border rounded-xl overflow-hidden shadow-2xl">
-        
-        <!-- Terminal Header Bar -->
-        <div class="h-9 bg-editor-panel border-b border-editor-border px-4 flex items-center justify-between shrink-0">
-          <div class="flex items-center gap-2">
-            <!-- Studio Minimalist Dots -->
-            <div class="flex items-center gap-1.5">
-              <span class="w-2.5 h-2.5 rounded-full bg-zinc-800"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-zinc-700"></span>
-              <span class="w-2.5 h-2.5 rounded-full bg-editor-orange"></span>
-            </div>
-            <span class="text-[11px] font-mono text-zinc-300 ml-2 flex items-center gap-1.5">
-              <i data-lucide="terminal" class="w-3.5 h-3.5 text-editor-orange"></i>
-              Output Monitor
-            </span>
-          </div>
-
-          <div class="flex items-center gap-3 font-mono">
-            <label class="flex items-center gap-1.5 text-[10px] text-zinc-400 cursor-pointer select-none">
-              <input type="checkbox" id="chk-autoscroll" checked class="accent-orange-500">
-              Auto-scroll
-            </label>
-            <button 
-              onclick="copyTerminalLogs()" 
-              class="text-[10px] text-zinc-400 hover:text-white flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-zinc-800 transition-colors">
-              <i data-lucide="copy" class="w-3 h-3"></i>
-              Copy Logs
-            </button>
-          </div>
-        </div>
-
-        <!-- Terminal Logs Window Body -->
-        <div id="terminal-body" class="flex-1 p-4 font-mono text-xs overflow-y-auto space-y-1.5 leading-relaxed bg-editor-black text-zinc-300">
-          <div class="text-zinc-500 italic">
-            [System initialized] KhmerDubStudio ready. Enter a video URL or select a local video to begin.
-          </div>
-        </div>
-      </div>
-
-    </section>
 
   </main>
 

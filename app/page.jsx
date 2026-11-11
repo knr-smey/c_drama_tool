@@ -336,8 +336,35 @@ export default function Home() {
         {/* View Switcher */}
         {activeTab === 'editor' && (
           <main className="flex-1 flex overflow-hidden bg-editor-black">
-            {/* Left Inspector Panel (420px) */}
-            <aside className="w-[420px] border-r border-editor-border bg-editor-panel flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-4">
+            {/* Left/Center Canvas: Timeline Track & Output Console */}
+            <section className="flex-1 flex flex-col overflow-hidden bg-editor-black p-5 space-y-4">
+              <TimelineTrack
+                currentStage={currentStage}
+                stageBadge={stageBadge}
+                stageHeadline={stageHeadline}
+                progressPct={progressPct}
+              />
+
+              <SuccessBanner
+                completedData={completedData}
+                onPlayVideo={() => handlePlayVideoPath(completedData?.outputPath, completedData?.downloadUrl)}
+                onRevealFile={() => handleRevealPath(completedData?.outputPath)}
+              />
+
+              <TerminalMonitor
+                logs={logs}
+                autoScroll={autoScroll}
+                setAutoScroll={setAutoScroll}
+                onCopyLogs={() => {
+                  const text = logs.map((l) => `[${l.time}] [${l.level}] ${l.message}`).join('\n');
+                  navigator.clipboard.writeText(text);
+                  appendLog('INFO', 'Logs copied to clipboard.');
+                }}
+              />
+            </section>
+
+            {/* Right Inspector Panel (420px) */}
+            <aside className="w-[420px] border-l border-editor-border bg-editor-panel flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-4">
               <div className="space-y-4">
                 <div className="pb-1 border-b border-editor-border/60 flex items-center justify-between">
                   <h2 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
@@ -412,33 +439,6 @@ export default function Home() {
                 )}
               </div>
             </aside>
-
-            {/* Right Canvas: Timeline Track & Output Console */}
-            <section className="flex-1 flex flex-col overflow-hidden bg-editor-black p-5 space-y-4">
-              <TimelineTrack
-                currentStage={currentStage}
-                stageBadge={stageBadge}
-                stageHeadline={stageHeadline}
-                progressPct={progressPct}
-              />
-
-              <SuccessBanner
-                completedData={completedData}
-                onPlayVideo={() => handlePlayVideoPath(completedData?.outputPath, completedData?.downloadUrl)}
-                onRevealFile={() => handleRevealPath(completedData?.outputPath)}
-              />
-
-              <TerminalMonitor
-                logs={logs}
-                autoScroll={autoScroll}
-                setAutoScroll={setAutoScroll}
-                onCopyLogs={() => {
-                  const text = logs.map((l) => `[${l.time}] [${l.level}] ${l.message}`).join('\n');
-                  navigator.clipboard.writeText(text);
-                  appendLog('INFO', 'Logs copied to clipboard.');
-                }}
-              />
-            </section>
           </main>
         )}
 
