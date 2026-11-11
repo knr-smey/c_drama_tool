@@ -54,8 +54,17 @@ export default function SettingsView({
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-dash-orange" />
-              API Key (OpenRouter or Gemini)
+              AI Drama Translation Key (OpenRouter or Gemini)
             </h3>
+            {geminiKey ? (
+              <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+                Cinema Quality Active
+              </span>
+            ) : (
+              <span className="text-[10px] font-mono text-zinc-400">
+                Drama Lexicon + Google Fallback
+              </span>
+            )}
           </div>
 
           <div className="relative">
@@ -75,7 +84,28 @@ export default function SettingsView({
             </button>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex items-center justify-between pt-1">
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+              <span>Get free cinema-grade AI keys:</span>
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="text-dash-orange hover:underline font-bold"
+              >
+                Google AI Studio
+              </a>
+              <span>•</span>
+              <a
+                href="https://openrouter.ai/keys"
+                target="_blank"
+                rel="noreferrer"
+                className="text-dash-orange hover:underline font-bold"
+              >
+                OpenRouter
+              </a>
+            </div>
+
             <button
               onClick={handleSave}
               className="px-4 py-2 rounded-xl text-xs font-bold bg-dash-orange hover:bg-orange-600 text-white shadow-sm shadow-orange-500/20 transition-all"

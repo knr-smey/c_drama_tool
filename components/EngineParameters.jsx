@@ -82,15 +82,24 @@ export default function EngineParameters({
         <div className="flex items-center justify-between">
           <span className="block text-[11px] font-bold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-dash-orange" />
-            AI API Key
+            AI Drama Translation
           </span>
+          {geminiKey ? (
+            <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/40">
+              Cinema Quality
+            </span>
+          ) : (
+            <span className="text-[10px] font-mono text-zinc-400 font-normal">
+              Lexicon + Google
+            </span>
+          )}
         </div>
         <div className="relative">
           <input
             type={showKey ? 'text' : 'password'}
             value={geminiKey}
             onChange={(e) => setGeminiKey(e.target.value)}
-            placeholder="OpenRouter or Gemini API Key"
+            placeholder="Paste Gemini or OpenRouter API key"
             className="w-full bg-white dark:bg-[#121319] border border-[#e5e1d8] dark:border-[#2a2d39] text-xs text-zinc-900 dark:text-zinc-100 rounded-lg px-2.5 py-2 pr-14 outline-none focus:border-dash-orange placeholder-zinc-400 font-mono"
           />
           <button
@@ -101,6 +110,30 @@ export default function EngineParameters({
             {showKey ? 'Hide' : 'Show'}
           </button>
         </div>
+        {!geminiKey && (
+          <div className="flex items-center justify-between text-[10px] text-zinc-500 dark:text-zinc-400 pt-0.5">
+            <span>Get free cinema-grade AI key:</span>
+            <div className="flex items-center gap-2 font-mono">
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="text-dash-orange hover:underline font-bold"
+              >
+                Gemini Free
+              </a>
+              <span>•</span>
+              <a
+                href="https://openrouter.ai/keys"
+                target="_blank"
+                rel="noreferrer"
+                className="text-dash-orange hover:underline font-bold"
+              >
+                OpenRouter
+              </a>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Audio-Video Remux Strategy */}

@@ -274,6 +274,106 @@ def clean_translated_text(text: str) -> str:
     return text.strip()
 
 
+DRAMA_EXACT_MAP = {
+    # Urgent shouts & commands
+    "住手": "ឈប់ភ្លាម!",
+    "住手！": "ឈប់ភ្លាម!",
+    "住嘴": "បិទមាត់ភ្លាម!",
+    "住嘴！": "បិទមាត់ភ្លាម!",
+    "闭嘴": "បិទមាត់ភ្លាម!",
+    "闭嘴！": "បិទមាត់ភ្លាម!",
+    "放肆": "ហ៊ានណាស់!",
+    "放肆！": "ហ៊ានណាស់!",
+    "大胆": "ថ្លើមពាសមេឃ!",
+    "大胆！": "ថ្លើមពាសមេឃ!",
+    "滚": "ចេញទៅ!",
+    "滚！": "ចេញទៅ!",
+    "给我滚": "ចេញពីមុខខ្ញុំភ្លាម!",
+    "给我滚！": "ចេញពីមុខខ្ញុំភ្លាម!",
+    "滚开": "ចេញទៅឱ្យឆ្ងាយ!",
+    "滚开！": "ចេញទៅឱ្យឆ្ងាយ!",
+    "快走": "ឆាប់រត់ទៅ!",
+    "快走！": "ឆាប់រត់ទៅ!",
+    "快逃": "ឆាប់គេចខ្លួនទៅ!",
+    "快逃！": "ឆាប់គេចខ្លួនទៅ!",
+    "快跑": "ឆាប់រត់ទៅ!",
+    "快跑！": "ឆាប់រត់ទៅ!",
+    "救命": "ជួយផង!",
+    "救命啊": "ជួយខ្ញុំផង!",
+    "救命！": "ជួយផង!",
+    "救命啊！": "ជួយខ្ញុំផង!",
+    "受死吧": "ទៅស្លាប់ទៅ!",
+    "受死吧！": "ទៅស្លាប់ទៅ!",
+    "纳命来": "ប្រគល់ជីវិតមក!",
+    "纳命来！": "ប្រគល់ជីវិតមក!",
+    "找死": "ចង់ងាប់មែនទេ!",
+    "找死！": "ចង់ងាប់មែនទេ!",
+    "你找死": "ឯងចង់ងាប់មែនទេ!",
+    "你找死！": "ឯងចង់ងាប់មែនទេ!",
+    "饶命": "លើកលែងជីវិតឱ្យខ្ញុំផង!",
+    "饶命啊": "លើកលែងជីវិតឱ្យខ្ញុំផង!",
+    "饶命！": "លើកលែងជីវិតឱ្យខ្ញុំផង!",
+    "饶了我吧": "លើកលែងជីវិតឱ្យខ្ញុំផង!",
+    "来人": "ឆ្មាំទាហានមកទីនេះ!",
+    "来人啊": "នរណានៅខាងក្រៅ! ឆ្មាំទាហាន!",
+    "遵命": "សូមទទួលបញ្ជា!",
+    "遵命！": "សូមទទួលបញ្ជា!",
+    "属下遵命": "កូនចៅសូមទទួលបញ្ជា!",
+    "微臣遵命": "ទូលបង្គំសូមទទួលបញ្ជា!",
+    "谨遵圣谕": "សូមទទួលព្រះរាជបញ្ជា!",
+    "谢主隆恩": "អរព្រះគុណព្រះអង្គ!",
+    "岂有此理": "គ្មានហេតុផលសោះ!",
+    "不自量力": "មិនចេះស្គាល់កម្លាំងខ្លួនឯង!",
+    "休得无礼": "កុំឈ្លើយឱ្យសោះ!",
+    "休想": "កុំសង្ឃឹមឱ្យសោះ!",
+    "后会有期": "ជួបគ្នានៅថ្ងៃក្រោយ!",
+    "原来是你": "តាមពិតគឺជាឯងសោះ!",
+    "原来是你！": "តាមពិតគឺជាឯងសោះ!",
+    "没事吧": "មិនអីទេមែនទេ?",
+    "你没事吧": "ឯងមិនអីទេមែនទេ?",
+    "何方神圣": "តើជាកំពូលមនុស្សមកពីណា?",
+    "一言为定": "និយាយមួយម៉ាត់គឺមួយម៉ាត់!",
+    "一言为定！": "និយាយមួយម៉ាត់គឺមួយម៉ាត់!",
+    "对不起": "សុំទោស",
+    "谢谢": "អរគុណ",
+    "多谢": "អរគុណច្រើន",
+    "保重": "ថែរក្សាខ្លួនផង",
+    "小心": "ប្រយ័ត្ន!",
+    "小心！": "ប្រយ័ត្ន!",
+    "等等": "ចាំបន្តិចសិន!",
+    "慢着": "ឈប់សិន!",
+}
+
+GOOGLE_MISTRANSLATION_FIXES = [
+    (re.compile(r"រមៀល\b"), "ចេញទៅ"),
+    (re.compile(r"ឈប់ដៃ\b"), "ឈប់ភ្លាម"),
+    (re.compile(r"អ្នកកំពុងស្វែងរកការស្លាប់\b"), "ឯងចង់ងាប់មែនទេ"),
+    (re.compile(r"ស្វែងរកការស្លាប់\b"), "ចង់ងាប់"),
+    (re.compile(r"ទទួលការស្លាប់\b"), "ទៅស្លាប់ទៅ"),
+    (re.compile(r"ជីវិតទំនេរ\b"), "លើកលែងជីវិតឱ្យខ្ញុំផង"),
+    (re.compile(r"មនុស្សមក\b"), "ឆ្មាំទាហានមកទីនេះ"),
+    (re.compile(r"ដើរលឿន\b"), "ឆាប់ទៅ"),
+    (re.compile(r"កាត់ស្មៅកម្ចាត់ឫស\b"), "កម្ចាត់ស្មៅត្រូវរំលើងឫស"),
+    (re.compile(r"មិនប្រុងប្រយ័ត្ន\b"), "ហ៊ានណាស់"),
+    (re.compile(r"ទាសករ(?=[សនបខ្ញុំ])"), "ខ្ញុំម្ចាស់"),
+]
+
+
+def enhance_khmer_drama_translation(original_cn: str, km_text: str) -> str:
+    """Post-processes and elevates translation to authentic Khmer cinema dubbing quality."""
+    if not km_text:
+        return ""
+    clean_cn = re.sub(r"[\s!?,.。！？，]+$", "", original_cn or "").strip()
+    if clean_cn in DRAMA_EXACT_MAP:
+        return DRAMA_EXACT_MAP[clean_cn]
+
+    enhanced = km_text
+    for pattern, replacement in GOOGLE_MISTRANSLATION_FIXES:
+        enhanced = pattern.sub(replacement, enhanced)
+
+    return clean_translated_text(enhanced)
+
+
 def mymemory_language_code(lang: str) -> str:
     """Map an ISO 639-1 language code to a MyMemory-compatible code."""
     if not lang:
@@ -1223,16 +1323,39 @@ class DubbingAPI:
                     continue
 
                 system_prompt = (
-                    "You are an expert Chinese drama dubbing translator specializing in translating "
-                    "Chinese dramas (historical, Xianxia, Wuxia, and romance) into natural, fluent spoken Khmer (ភាសាខ្មែរ).\n\n"
-                    "Task: Translate each dialogue line into authentic, natural Khmer dubbing speech.\n"
-                    "Rules:\n"
-                    "1. Use appropriate historical drama honorifics and respectful pronouns (e.g. 奴婢 -> ខ្ញុំម្ចាស់, 公子 -> អ្នកប្រុស/លោកម្ចាស់, 阁下 -> លោកម្ចាស់, 陛下 -> ព្រះអង្គ, 师傅 -> លោកគ្រូ).\n"
-                    "2. Translate idioms and martial arts terms naturally with their true meaning and emotional tone (e.g. 斩草除根 -> កម្ចាត់ស្មៅត្រូវរំលើងឫស).\n"
-                    "3. Keep lines concise for natural spoken lip-sync timing.\n"
-                    "4. Output format: Exactly one line per input with matching [ID], containing only the Khmer translation.\n"
-                    "Example:\n[0] ខ្ញុំម្ចាស់សូមដោះលែងលោកប្រុស...\n[1] ដាវស្វៀនហួន...\n\n"
-                    f"Dialogue lines:\n{lines_text}"
+                    "You are a master Cambodian TV & Cinema dubbing director and senior translator "
+                    "(with 20+ years dubbing Chinese TV dramas, Xianxia, Wuxia martial arts, costume royal court, "
+                    "and CEO romance into authentic spoken Khmer ភាសាខ្មែរ).\n\n"
+                    "Goal: Translate each dialogue line into authentic, natural, emotional spoken Khmer dubbing dialogue.\n\n"
+                    "CRITICAL DUBBING RULES:\n"
+                    "1. SPOKEN DRAMA TONE (ភាសានិយាយភាពយន្ត):\n"
+                    "   - Use authentic spoken emotion, drama particles, and exclamation (e.g. ណា៎, ទៅ!, មែនទេ?, ចុះ!, ណាស់, ហ្នឹង!).\n"
+                    "   - Do NOT produce robotic dictionary or literal word-for-word translations.\n"
+                    "2. HISTORICAL & COURT HONORIFICS:\n"
+                    "   - 陛下/皇上 -> ព្រះអង្គ / ព្រះករុណា\n"
+                    "   - 臣/微臣 -> ទូលបង្គំ / ខ្ញុំម្ចាស់\n"
+                    "   - 奴婢/奴才 -> ខ្ញុំម្ចាស់ / ខ្ញុំបាទ\n"
+                    "   - 遵命/谨遵圣谕 -> សូមទទួលបញ្ជា! / សូមទទួលព្រះរាជបញ្ជា!\n"
+                    "   - 师傅/师父 -> លោកគ្រូ, 师兄/师弟 -> សិស្សច្បង/សិស្សប្អូន\n"
+                    "   - 公子/姑娘 -> អ្នកប្រុស/អ្នកនាង\n"
+                    "   - 王爷/王妃 -> ព្រះអង្គម្ចាស់/ព្រះជាយា\n"
+                    "3. DRAMA ACTION & EMOTION PHRASES:\n"
+                    "   - 住手! -> ឈប់ភ្លាម!\n"
+                    "   - 放肆!/大胆! -> ហ៊ានណាស់! / ថ្លើមពាសមេឃ!\n"
+                    "   - 滚!/给我滚! -> ចេញទៅ! / ចេញពីមុខខ្ញុំភ្លាម!\n"
+                    "   - 找死!/你找死! -> ឯងចង់ងាប់មែនទេ!\n"
+                    "   - 受死吧! -> ទៅស្លាប់ទៅ!\n"
+                    "   - 饶命! -> លើកលែងជីវិតឱ្យខ្ញុំផង!\n"
+                    "   - 来人啊! -> ឆ្មាំទាហានមកទីនេះ!\n"
+                    "   - 快走!/快逃! -> ឆាប់រត់ទៅ!\n"
+                    "   - 斩草除根 -> កម្ចាត់ស្មៅត្រូវរំលើងឫស\n"
+                    "   - 血海深仇 -> គំនុំឈាមជ្រៅដូចសមុទ្រ\n"
+                    "4. LIP-SYNC CONCISENESS:\n"
+                    "   - Keep lines rhythmic and concise so the voiceover finishes cleanly within the spoken timing.\n"
+                    "5. OUTPUT FORMAT:\n"
+                    "   - Exactly one line per input with matching [ID], containing ONLY the Khmer translation.\n"
+                    "Example:\n[0] ឈប់ភ្លាម! ឯងចង់ងាប់មែនទេ?!\n[1] ខ្ញុំម្ចាស់សូមទទួលព្រះរាជបញ្ជា...\n\n"
+                    f"Dialogue lines to dub:\n{lines_text}"
                 )
 
                 if is_openai_style:
@@ -1240,10 +1363,14 @@ class DubbingAPI:
                     if is_openrouter:
                         endpoint = "https://openrouter.ai/api/v1/chat/completions"
                         candidate_models = [
+                            "google/gemini-2.0-flash-001",
+                            "deepseek/deepseek-chat",
+                            "qwen/qwen-2.5-72b-instruct",
+                            "meta-llama/llama-3.3-70b-instruct",
                             "deepseek/deepseek-r1:free",
                             "deepseek/deepseek-chat:free",
-                            "meta-llama/llama-3.3-70b-instruct:free",
                             "qwen/qwen-2.5-72b-instruct:free",
+                            "meta-llama/llama-3.3-70b-instruct:free",
                             "google/gemini-2.0-flash-thinking-exp:free"
                         ]
                     elif is_groq:
@@ -1282,6 +1409,7 @@ class DubbingAPI:
                                         if km_t and contains_khmer(km_t):
                                             matched_seg = next((s for s in batch if s["id"] == s_id), None)
                                             if matched_seg:
+                                                km_t = enhance_khmer_drama_translation(matched_seg["text"], km_t)
                                                 cache[matched_seg["text"].strip()] = (km_t, "AI Drama")
                                                 found_any = True
                                 if found_any:
@@ -1297,7 +1425,7 @@ class DubbingAPI:
                         "generationConfig": {"temperature": 0.25, "maxOutputTokens": 4096}
                     }
 
-                    for model_id in ("gemini-2.0-flash", "gemini-1.5-flash"):
+                    for model_id in ("gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"):
                         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_id}:generateContent?key={key}"
                         try:
                             resp = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, proxies=req_proxies, timeout=25)
@@ -1313,6 +1441,7 @@ class DubbingAPI:
                                         if km_t and contains_khmer(km_t):
                                             matched_seg = next((s for s in batch if s["id"] == s_id), None)
                                             if matched_seg:
+                                                km_t = enhance_khmer_drama_translation(matched_seg["text"], km_t)
                                                 cache[matched_seg["text"].strip()] = (km_t, "Gemini AI")
                                 break
                             elif resp.status_code == 429:
@@ -1394,11 +1523,19 @@ class DubbingAPI:
             if clean in cache:
                 return cache[clean]
 
+            # Fast match: authentic Chinese drama exact phrases & shouts
+            clean_lookup = re.sub(r"[\s!?,.。！？，]+$", "", clean).strip()
+            if clean_lookup in DRAMA_EXACT_MAP:
+                out = DRAMA_EXACT_MAP[clean_lookup]
+                cache[clean] = (out, "Drama Lexicon")
+                return cache[clean]
+
             # 1. Google via deep-translator
             if google and not google_disabled:
                 try:
                     out = clean_translated_text(google.translate(clean))
                     if out and contains_khmer(out):
+                        out = enhance_khmer_drama_translation(clean, out)
                         cache[clean] = (out, "Google")
                         return cache[clean]
                 except Exception as e:
@@ -1416,6 +1553,7 @@ class DubbingAPI:
                             out = mymemory_direct(clean)
                         out = clean_translated_text(out)
                         if out and contains_khmer(out):
+                            out = enhance_khmer_drama_translation(clean, out)
                             cache[clean] = (out, "MyMemory")
                             return cache[clean]
                     except Exception:
@@ -1425,6 +1563,7 @@ class DubbingAPI:
             try:
                 out = clean_translated_text(google_direct(clean))
                 if out:
+                    out = enhance_khmer_drama_translation(clean, out)
                     cache[clean] = (out, "Google GTX")
                     return cache[clean]
             except Exception:
@@ -1436,6 +1575,7 @@ class DubbingAPI:
             try:
                 out = clean_translated_text(ollama_direct(clean))
                 if out and contains_khmer(out):
+                    out = enhance_khmer_drama_translation(clean, out)
                     cache[clean] = (out, "Ollama")
                     return cache[clean]
             except Exception:
@@ -1449,6 +1589,7 @@ class DubbingAPI:
 
             original_text = seg["text"]
             khmer_text, provider = translate_text(original_text)
+            khmer_text = enhance_khmer_drama_translation(original_text, khmer_text)
             seg["km_text"] = khmer_text
 
             if provider:
