@@ -26,7 +26,7 @@ export default function Sidebar({
   ];
 
   return (
-    <aside className="w-18 bg-[#fbfaf7] border-r border-[#ebe7df] flex flex-col justify-between items-center py-4 shrink-0 select-none z-30">
+    <aside className="w-18 bg-[#fbfaf7] dark:bg-[#121319] border-r border-[#ebe7df] dark:border-[#22242c] flex flex-col justify-between items-center py-4 shrink-0 select-none z-30 transition-colors duration-200">
       {/* Top Branding Section */}
       <div className="flex flex-col items-center gap-6 w-full">
         {/* App Logo Mark */}
@@ -48,7 +48,7 @@ export default function Sidebar({
                 className={`relative w-11 h-11 flex items-center justify-center rounded-2xl transition-all ${
                   isActive
                     ? 'bg-dash-orange text-white shadow-md shadow-orange-500/30 font-bold scale-105'
-                    : 'text-zinc-400 hover:text-zinc-800 hover:bg-black/5'
+                    : 'text-zinc-400 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-black/5 dark:hover:bg-white/5'
                 }`}
               >
                 <Icon className="w-5 h-5 stroke-[2]" />
@@ -65,7 +65,7 @@ export default function Sidebar({
       <div className="flex flex-col items-center gap-2.5 w-full px-2">
         <button
           onClick={onOpenOutputDir}
-          className="w-10 h-10 flex items-center justify-center rounded-2xl text-zinc-400 hover:text-zinc-800 hover:bg-black/5 transition-all"
+          className="w-10 h-10 flex items-center justify-center rounded-2xl text-zinc-400 dark:text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 hover:bg-black/5 dark:hover:bg-white/5 transition-all"
           title="Open Output Folder"
         >
           <Folder className="w-4 h-4 text-dash-orange" />
@@ -73,7 +73,7 @@ export default function Sidebar({
 
         <button
           onClick={onQuit}
-          className="w-10 h-10 flex items-center justify-center rounded-2xl text-zinc-400 hover:text-dash-orange hover:bg-orange-500/10 transition-all"
+          className="w-10 h-10 flex items-center justify-center rounded-2xl text-zinc-400 dark:text-zinc-500 hover:text-dash-orange hover:bg-orange-500/10 transition-all"
           title="Quit Application"
         >
           <Power className="w-4 h-4" />

@@ -19,6 +19,9 @@ import SettingsView from '@/components/views/SettingsView';
 import { Play, XCircle } from 'lucide-react';
 
 export default function Home() {
+  // Theme State ('light' | 'dark')
+  const [theme, setTheme] = useState('light');
+
   // Navigation State
   const [activeTab, setActiveTab] = useState('editor'); // 'editor' | 'search' | 'library' | 'settings'
 
@@ -47,6 +50,32 @@ export default function Home() {
 
   // Quick Modal State
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Load saved theme on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('khmerdub_theme') || 'light';
+      setTheme(savedTheme);
+      if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  }, []);
+
+  const handleToggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('khmerdub_theme', nextTheme);
+      if (nextTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+  };
 
   // Load saved AI Key from localStorage on mount
   useEffect(() => {
@@ -311,7 +340,7 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen flex overflow-hidden bg-[#f6f5f0] select-none font-sans text-zinc-900">
+    <div className="h-screen flex overflow-hidden bg-[#f6f5f0] dark:bg-[#0c0d12] select-none font-sans text-zinc-900 dark:text-zinc-100 transition-colors duration-200">
       {/* 1. Sidebar Navigation Menu */}
       <Sidebar
         activeTab={activeTab}
@@ -322,11 +351,13 @@ export default function Home() {
       />
 
       {/* 2. Main Dynamic Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-[#f6f5f0]">
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#f6f5f0] dark:bg-[#0c0d12]">
         {/* Top Header Bar */}
         <Header
           systemStatus={systemStatus}
           engineInfo="Whisper + Edge TTS (km-KH)"
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
           onOpenSearch={() => setIsSearchOpen(true)}
           onOpenOutputDir={handleOpenOutputDir}
           onClearLogs={() => setLogs([])}
@@ -335,33 +366,33 @@ export default function Home() {
 
         {/* View Switcher */}
         {activeTab === 'editor' && (
-          <main className="flex-1 flex overflow-hidden bg-[#f6f5f0]">
+          <main className="flex-1 flex overflow-hidden bg-[#f6f5f0] dark:bg-[#0c0d12]">
             {/* Left/Center Canvas: Greeting Stats + Timeline + Output Console */}
-            <section className="flex-1 flex flex-col overflow-hidden bg-[#f6f5f0] p-5 space-y-4">
+            <section className="flex-1 flex flex-col overflow-hidden bg-[#f6f5f0] dark:bg-[#0c0d12] p-5 space-y-4">
               
               {/* Studio Overview Card (Matching reference top card with stats & wave) */}
-              <div className="bg-white border border-[#ebe7df] rounded-2xl p-5 shadow-sm flex items-center justify-between shrink-0">
+              <div className="bg-white dark:bg-[#15161e] border border-[#ebe7df] dark:border-[#242630] rounded-2xl p-5 shadow-sm flex items-center justify-between shrink-0 transition-colors">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-dash-orange" />
                     <span className="text-[11px] font-bold uppercase tracking-wider text-dash-orange font-mono">AI Dubbing Engine</span>
                   </div>
-                  <h2 className="text-xl font-extrabold text-zinc-900 tracking-tight">Studio Dashboard</h2>
-                  <p className="text-xs text-zinc-500">Automated speech extraction, translation, and neural voice remuxing.</p>
+                  <h2 className="text-xl font-extrabold text-zinc-900 dark:text-white tracking-tight">Studio Dashboard</h2>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">Automated speech extraction, translation, and neural voice remuxing.</p>
                 </div>
 
                 {/* Right Visual Stats & Wave */}
                 <div className="flex items-center gap-6">
                   {/* Mini Stats Column */}
                   <div className="flex items-center gap-4 text-center">
-                    <div className="bg-[#faf9f5] border border-[#ebe7df] px-3.5 py-2 rounded-xl">
-                      <div className="text-sm font-extrabold text-zinc-900 font-mono">
+                    <div className="bg-[#faf9f5] dark:bg-[#1a1c24] border border-[#ebe7df] dark:border-[#2b2d38] px-3.5 py-2 rounded-xl">
+                      <div className="text-sm font-extrabold text-zinc-900 dark:text-white font-mono">
                         {systemStatus === 'Processing' ? '1' : '0'}
                       </div>
                       <div className="text-[10px] text-zinc-400 font-medium">Active</div>
                     </div>
-                    <div className="bg-[#faf9f5] border border-[#ebe7df] px-3.5 py-2 rounded-xl">
-                      <div className="text-sm font-extrabold text-zinc-900 font-mono">
+                    <div className="bg-[#faf9f5] dark:bg-[#1a1c24] border border-[#ebe7df] dark:border-[#2b2d38] px-3.5 py-2 rounded-xl">
+                      <div className="text-sm font-extrabold text-zinc-900 dark:text-white font-mono">
                         {whisperModel}
                       </div>
                       <div className="text-[10px] text-zinc-400 font-medium">Whisper</div>
@@ -413,10 +444,10 @@ export default function Home() {
             </section>
 
             {/* Right Inspector Panel (400px) */}
-            <aside className="w-[400px] border-l border-[#ebe7df] bg-[#fbfaf7] flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-4">
+            <aside className="w-[400px] border-l border-[#ebe7df] dark:border-[#242630] bg-[#fbfaf7] dark:bg-[#121319] flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-4 transition-colors">
               <div className="space-y-4">
-                <div className="pb-1 border-b border-[#ebe7df] flex items-center justify-between">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-900 flex items-center gap-2">
+                <div className="pb-1 border-b border-[#ebe7df] dark:border-[#242630] flex items-center justify-between">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-900 dark:text-white flex items-center gap-2">
                     <span className="w-1.5 h-3 bg-dash-orange rounded-sm" />
                     Dubbing Parameters
                   </h2>
@@ -458,7 +489,7 @@ export default function Home() {
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-3 border-t border-[#ebe7df] space-y-2">
+              <div className="pt-3 border-t border-[#ebe7df] dark:border-[#242630] space-y-2">
                 <button
                   onClick={handleStartPipeline}
                   disabled={isRunning}
@@ -480,7 +511,7 @@ export default function Home() {
                 {isRunning && (
                   <button
                     onClick={handleCancelPipeline}
-                    className="w-full py-2 px-3 rounded-xl text-xs font-bold text-dash-orange hover:bg-orange-100/60 border border-orange-300 transition-all flex items-center justify-center gap-1.5"
+                    className="w-full py-2 px-3 rounded-xl text-xs font-bold text-dash-orange hover:bg-orange-100/60 dark:hover:bg-orange-500/20 border border-orange-300 dark:border-orange-500/30 transition-all flex items-center justify-center gap-1.5"
                   >
                     <XCircle className="w-3.5 h-3.5" />
                     <span>Cancel Operation</span>

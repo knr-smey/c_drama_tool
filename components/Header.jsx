@@ -1,11 +1,13 @@
 'use client';
 
 import React from 'react';
-import { Scissors, Folder, Trash2, Power, Search } from 'lucide-react';
+import { Scissors, Folder, Trash2, Power, Search, Sun, Moon } from 'lucide-react';
 
 export default function Header({
   systemStatus = 'Ready',
   engineInfo = 'Whisper + Edge TTS',
+  theme = 'light',
+  onToggleTheme,
   onOpenSearch,
   onOpenOutputDir,
   onClearLogs,
@@ -64,6 +66,19 @@ export default function Header({
           title="Clear Logs"
         >
           <Trash2 className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Theme Toggle (Light / Dark) */}
+        <button
+          onClick={onToggleTheme}
+          className="p-1.5 text-zinc-400 hover:text-white hover:bg-[#2b2d35] rounded-full transition-all"
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {theme === 'dark' ? (
+            <Sun className="w-3.5 h-3.5 text-dash-orange" />
+          ) : (
+            <Moon className="w-3.5 h-3.5 text-zinc-300" />
+          )}
         </button>
 
         <button

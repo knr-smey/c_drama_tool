@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-[#f6f5f0] text-zinc-900 antialiased select-none;
+    @apply bg-[#f6f5f0] text-zinc-900 dark:bg-[#0c0d12] dark:text-zinc-100 antialiased select-none transition-colors duration-200;
   }
 }
 
@@ -19,6 +19,9 @@
 ::-webkit-scrollbar-thumb {
   background: #d4d0c7;
   border-radius: 6px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #27272a;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #ff6b00;

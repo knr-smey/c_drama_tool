@@ -59,23 +59,23 @@ export default function MovieExplorerView({
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden bg-[#f6f5f0] p-6 space-y-5">
+    <div className="flex-1 flex flex-col overflow-hidden bg-[#f6f5f0] dark:bg-[#0c0d12] p-6 space-y-5 transition-colors duration-200">
       {/* View Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-[#ebe7df]">
-        <h2 className="text-sm font-bold text-zinc-900 flex items-center gap-2">
+      <div className="flex items-center justify-between pb-3 border-b border-[#ebe7df] dark:border-[#242630]">
+        <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
           <Search className="w-4 h-4 text-dash-orange" />
           Drama Explorer
         </h2>
 
         {results.length > 0 && (
-          <span className="text-xs font-mono text-zinc-600 bg-white border border-[#ebe7df] px-2.5 py-0.5 rounded-full shadow-2xs">
+          <span className="text-xs font-mono text-zinc-600 dark:text-zinc-400 bg-white dark:bg-[#15161e] border border-[#ebe7df] dark:border-[#242630] px-2.5 py-0.5 rounded-full shadow-2xs">
             Found <span className="text-dash-orange font-bold">{results.length}</span> results
           </span>
         )}
       </div>
 
       {/* Search Input Box & Trending Chips */}
-      <div className="bg-white border border-[#ebe7df] rounded-2xl p-4 space-y-3 shadow-sm">
+      <div className="bg-white dark:bg-[#15161e] border border-[#ebe7df] dark:border-[#242630] rounded-2xl p-4 space-y-3 shadow-sm transition-colors duration-200">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <input
@@ -86,7 +86,7 @@ export default function MovieExplorerView({
                 if (e.key === 'Enter') handleSearch();
               }}
               placeholder="Search by drama title, keywords, or actor name..."
-              className="w-full bg-[#faf9f5] border border-[#e5e1d8] focus:border-dash-orange focus:bg-white text-xs text-zinc-900 placeholder-zinc-400 rounded-xl pl-9 pr-4 py-2.5 outline-none font-mono"
+              className="w-full bg-[#faf9f5] dark:bg-[#1a1c24] border border-[#e5e1d8] dark:border-[#2a2d39] focus:border-dash-orange focus:bg-white dark:focus:bg-[#15161e] text-xs text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 rounded-xl pl-9 pr-4 py-2.5 outline-none font-mono"
             />
             <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           </div>
@@ -103,12 +103,12 @@ export default function MovieExplorerView({
 
         {/* Trending Chips */}
         <div className="flex items-center gap-1.5 flex-wrap text-xs">
-          <span className="text-zinc-400 font-mono text-[11px] mr-1">Trending:</span>
+          <span className="text-zinc-400 dark:text-zinc-500 font-mono text-[11px] mr-1">Trending:</span>
           {TRENDING_CHIPS.map((chip, idx) => (
             <button
               key={idx}
               onClick={() => handleQuick(chip.query)}
-              className="px-3 py-1 rounded-xl bg-[#faf9f5] hover:bg-orange-50 hover:border-orange-300 text-zinc-700 hover:text-dash-orange border border-[#e5e1d8] transition-colors text-[11px] font-mono shadow-2xs"
+              className="px-3 py-1 rounded-xl bg-[#faf9f5] dark:bg-[#1a1c24] hover:bg-orange-50 dark:hover:bg-orange-950/40 hover:border-orange-300 dark:hover:border-dash-orange text-zinc-700 dark:text-zinc-300 hover:text-dash-orange border border-[#e5e1d8] dark:border-[#2a2d39] transition-colors text-[11px] font-mono shadow-2xs"
             >
               {chip.label}
             </button>
@@ -121,19 +121,19 @@ export default function MovieExplorerView({
         {loading ? (
           <div className="h-72 flex flex-col items-center justify-center text-center space-y-3">
             <div className="w-9 h-9 rounded-full border-2 border-dash-orange border-t-transparent animate-spin" />
-            <div className="text-xs font-mono text-zinc-700">
+            <div className="text-xs font-mono text-zinc-700 dark:text-zinc-300">
               Scraping video streams and metadata for <span className="text-dash-orange font-bold">"{query}"</span>...
             </div>
           </div>
         ) : error ? (
-          <div className="h-60 flex flex-col items-center justify-center text-center text-zinc-500 space-y-2 p-4">
+          <div className="h-60 flex flex-col items-center justify-center text-center text-zinc-500 dark:text-zinc-400 space-y-2 p-4">
             <AlertTriangle className="w-8 h-8 text-dash-orange stroke-[1.5]" />
-            <div className="text-xs text-zinc-800 font-semibold">Search encountered an error</div>
-            <div className="text-[11px] text-zinc-500 max-w-md font-mono">{error}</div>
+            <div className="text-xs text-zinc-800 dark:text-zinc-200 font-semibold">Search encountered an error</div>
+            <div className="text-[11px] text-zinc-500 dark:text-zinc-400 max-w-md font-mono">{error}</div>
           </div>
         ) : results.length === 0 ? (
-          <div className="h-60 flex flex-col items-center justify-center text-center text-zinc-400 space-y-2">
-            <Film className="w-8 h-8 text-zinc-300 stroke-[1.5]" />
+          <div className="h-60 flex flex-col items-center justify-center text-center text-zinc-400 dark:text-zinc-500 space-y-2">
+            <Film className="w-8 h-8 text-zinc-300 dark:text-zinc-600 stroke-[1.5]" />
             <div className="text-xs">No drama clips found. Try a different keyword or trending chip.</div>
           </div>
         ) : (
@@ -141,10 +141,10 @@ export default function MovieExplorerView({
             {results.map((item) => (
               <div
                 key={item.id}
-                className="p-3.5 rounded-2xl border border-[#ebe7df] bg-white hover:border-orange-300 transition-all flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md"
+                className="p-3.5 rounded-2xl border border-[#ebe7df] dark:border-[#242630] bg-white dark:bg-[#15161e] hover:border-orange-300 dark:hover:border-dash-orange transition-all flex flex-col justify-between space-y-3 group shadow-sm hover:shadow-md"
               >
                 {/* Thumbnail with overlay duration */}
-                <div className="relative aspect-video w-full bg-zinc-100 rounded-xl overflow-hidden border border-[#ebe7df]">
+                <div className="relative aspect-video w-full bg-zinc-100 dark:bg-zinc-800 rounded-xl overflow-hidden border border-[#ebe7df] dark:border-[#242630]">
                   <img
                     src={item.thumbnail || `https://i.ytimg.com/vi/${item.id}/hqdefault.jpg`}
                     alt={item.title}
@@ -161,12 +161,12 @@ export default function MovieExplorerView({
                 {/* Details */}
                 <div className="space-y-1.5">
                   <h4
-                    className="text-xs font-bold text-zinc-900 line-clamp-2 leading-snug group-hover:text-dash-orange transition-colors"
+                    className="text-xs font-bold text-zinc-900 dark:text-zinc-100 line-clamp-2 leading-snug group-hover:text-dash-orange transition-colors"
                     title={item.title}
                   >
                     {item.title}
                   </h4>
-                  <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono">
+                  <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400 font-mono">
                     <span className="truncate flex items-center gap-1">
                       <User className="w-3 h-3 text-dash-orange" />
                       {item.uploader}
@@ -175,7 +175,7 @@ export default function MovieExplorerView({
                       href={item.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-zinc-400 hover:text-zinc-900 transition-colors"
+                      className="text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                       title="Open on YouTube"
                     >
                       <ExternalLink className="w-3 h-3" />
@@ -184,7 +184,7 @@ export default function MovieExplorerView({
                 </div>
 
                 {/* Action Button */}
-                <div className="pt-2 border-t border-[#f0ece4]">
+                <div className="pt-2 border-t border-[#f0ece4] dark:border-[#242630]">
                   <button
                     onClick={() => onSelectMovieForDubbing(item)}
                     className="w-full py-2 px-3 rounded-xl text-xs font-bold bg-dash-orange hover:bg-orange-600 text-white transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-orange-500/20"
