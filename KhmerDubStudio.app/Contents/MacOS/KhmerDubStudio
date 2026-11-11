@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# macOS Application Bundle Launcher for KhmerDubStudio
+DIR="$(cd "$(dirname "$0")/../../" && pwd)"
+cd "$DIR"
+
+# Ensure common Node and Homebrew paths are present on GUI app launch
+export PATH="/opt/homebrew/bin:/usr/local/bin:$HOME/.nvm/versions/node/$(ls $HOME/.nvm/versions/node 2>/dev/null | tail -n 1)/bin:$PATH"
+
+if [ -d "$DIR/.venv" ]; then
+  source "$DIR/.venv/bin/activate"
+fi
+
+exec npm run app

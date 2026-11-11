@@ -10,7 +10,21 @@
     "build": "next build",
     "start": "next start",
     "desktop": "cross-env NODE_ENV=production electron .",
+    "dist:mac": "npm run build && electron-builder --mac --dir",
     "app": "npm run dev"
+  },
+  "build": {
+    "appId": "com.khmerdubstudio.desktop",
+    "productName": "KhmerDubStudio",
+    "mac": {
+      "category": "public.app-category.video",
+      "target": ["dir"]
+    },
+    "files": [
+      "electron/**/*",
+      ".next/**/*",
+      "package.json"
+    ]
   },
   "repository": {
     "type": "git",
@@ -39,5 +53,8 @@
     "react-dom": "^18.3.1",
     "tailwindcss": "^3.4.14",
     "wait-on": "^8.0.1"
+  },
+  "devDependencies": {
+    "electron-builder": "^26.18.0"
   }
 }
