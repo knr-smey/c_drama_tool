@@ -60,21 +60,21 @@ export default function MovieSearchModal({
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 select-none">
       <div className="w-full max-w-3xl bg-white dark:bg-[#15161e] border border-[#ebe7df] dark:border-[#242630] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[88vh] transition-colors duration-200">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#2b2d35] flex items-center justify-between bg-[#1e1f25]">
+        <div className="px-5 py-4 border-b border-[#ebe7df] dark:border-[#2b2d35] flex items-center justify-between bg-white dark:bg-[#1e1f25]">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-dash-orange text-white flex items-center justify-center font-bold">
               <Search className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <h3 className="text-sm font-bold text-zinc-900 dark:text-white flex items-center gap-2">
                 Search Online Dramas & Movies
               </h3>
-              <p className="text-[11px] text-zinc-400">Discover and import drama clips to dub with 1 click</p>
+              <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Discover and import drama clips to dub with 1 click</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors"
+            className="p-1.5 text-zinc-400 hover:text-zinc-900 dark:hover:text-white rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
