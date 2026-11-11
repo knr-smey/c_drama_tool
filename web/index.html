@@ -210,46 +210,7 @@
           </div>
         </div>
 
-        <!-- 2. Production Style: Drama Recap vs Direct Dubbing -->
-        <div class="bg-editor-card border border-editor-border rounded-xl p-3.5 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <label class="block text-xs font-semibold text-white flex items-center gap-1.5">
-              <i data-lucide="clapperboard" class="w-3.5 h-3.5 text-editor-orange"></i>
-              Production Style
-            </label>
-            <span class="px-1.5 py-0.5 text-[9px] font-mono font-bold bg-orange-500/10 text-editor-orange border border-editor-orange/30 rounded">Mode</span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <!-- Mode 1: Drama Recap & Storyteller -->
-            <label class="mode-card relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all border-editor-orange bg-editor-orangeDim shadow-sm shadow-orange-500/10" id="card-mode-recap">
-              <input type="radio" name="dubbing-style" value="recap" checked class="hidden" onchange="updateProductionMode(this.value)">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-bold text-white flex items-center gap-1">
-                  🎬 Drama Recap
-                </span>
-                <span class="px-1.5 py-0.5 text-[9px] font-bold bg-editor-orange text-black rounded font-mono">RECAP</span>
-              </div>
-              <div class="font-bold text-xs text-white">Drama Recap</div>
-              <div class="text-[10px] text-zinc-400 mt-0.5 leading-tight">AI narrates the plot with background SFX/music</div>
-            </label>
-
-            <!-- Mode 2: Direct Dialogue Dubbing -->
-            <label class="mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-editor-border bg-zinc-900/60 hover:border-editor-borderHover" id="card-mode-direct">
-              <input type="radio" name="dubbing-style" value="direct" class="hidden" onchange="updateProductionMode(this.value)">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-xs font-bold text-zinc-300 flex items-center gap-1">
-                  🎙️ Direct Dubbing
-                </span>
-                <span class="px-1.5 py-0.5 text-[9px] font-medium bg-zinc-800 text-zinc-400 rounded font-mono">1:1</span>
-              </div>
-              <div class="font-bold text-xs text-white">Direct Dubbing</div>
-              <div class="text-[10px] text-zinc-400 mt-0.5 leading-tight">Line-by-line speech with sentence lip-sync</div>
-            </label>
-          </div>
-        </div>
-
-        <!-- 3. Khmer Neural Voice Selection -->
+        <!-- 2. Khmer Neural Voice Selection -->
         <div class="bg-editor-card border border-editor-border rounded-xl p-3.5 space-y-2.5">
           <div class="flex items-center justify-between">
             <label class="block text-xs font-semibold text-white flex items-center gap-1.5">
@@ -432,7 +393,7 @@
           onclick="handleStartPipeline()" 
           class="w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider text-black bg-editor-orange hover:bg-editor-orangeHover active:scale-[0.99] shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none">
           <i data-lucide="play" id="btn-icon" class="w-4 h-4 fill-black text-black"></i>
-          <span id="btn-text">Generate Drama Recap</span>
+          <span id="btn-text">Start Dubbing Pipeline</span>
         </button>
 
         <button 
@@ -726,7 +687,7 @@
   <script>
     // State
     let selectedVoice = "km-KH-PisethNeural";
-    let selectedProductionMode = "recap";
+    let selectedProductionMode = "direct";
     let isRunning = false;
     let completedOutputPath = "";
     let completedDownloadUrl = "";
@@ -789,24 +750,9 @@
       }
     });
 
-    // Production Mode (Drama Recap vs Direct Dubbing)
+    // Production Mode fixed to Direct Dubbing
     function updateProductionMode(mode) {
-      selectedProductionMode = mode;
-      const cardRecap = document.getElementById("card-mode-recap");
-      const cardDirect = document.getElementById("card-mode-direct");
-      const btnText = document.getElementById("btn-text");
-
-      if (mode === "recap") {
-        cardRecap.className = "mode-card relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all border-editor-orange bg-editor-orangeDim shadow-sm shadow-orange-500/10";
-        cardDirect.className = "mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-editor-border bg-zinc-900/60 hover:border-editor-borderHover";
-        if (btnText) btnText.textContent = "Generate Drama Recap";
-        const duckRadio = document.querySelector('input[name="remux-mode"][value="duck"]');
-        if (duckRadio) duckRadio.checked = true;
-      } else {
-        cardDirect.className = "mode-card relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all border-editor-orange bg-editor-orangeDim shadow-sm shadow-orange-500/10";
-        cardRecap.className = "mode-card relative flex flex-col p-3 rounded-lg border cursor-pointer transition-all border-editor-border bg-zinc-900/60 hover:border-editor-borderHover";
-        if (btnText) btnText.textContent = "Start Dubbing Pipeline";
-      }
+      selectedProductionMode = "direct";
     }
 
     // Voice Selection Toggle

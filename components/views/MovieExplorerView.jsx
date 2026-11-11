@@ -184,22 +184,14 @@ export default function MovieExplorerView({
                   </div>
                 </div>
 
-                {/* Dual Action Buttons */}
-                <div className="pt-2 border-t border-editor-border/60 grid grid-cols-2 gap-2">
+                {/* Action Button */}
+                <div className="pt-2 border-t border-editor-border/60">
                   <button
-                    onClick={() => onSelectMovieForDubbing(item, 'recap')}
-                    className="py-1.5 px-2 rounded-lg text-[11px] font-bold bg-editor-orange hover:bg-editor-orangeHover text-black transition-all flex items-center justify-center gap-1 shadow-sm shadow-orange-500/20"
+                    onClick={() => onSelectMovieForDubbing(item)}
+                    className="w-full py-1.5 px-3 rounded-lg text-xs font-bold bg-editor-orange hover:bg-editor-orangeHover text-black transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-orange-500/20"
                   >
-                    <Check className="w-3 h-3 stroke-[3]" />
-                    <span>Recap Movie</span>
-                  </button>
-
-                  <button
-                    onClick={() => onSelectMovieForDubbing(item, 'direct')}
-                    className="py-1.5 px-2 rounded-lg text-[11px] font-bold bg-zinc-900 hover:bg-zinc-800 text-white border border-editor-border hover:border-editor-borderHover transition-all flex items-center justify-center gap-1"
-                  >
-                    <Play className="w-3 h-3 fill-white" />
-                    <span>Direct Dub</span>
+                    <Play className="w-3 h-3 fill-black text-black" />
+                    <span>Dub Video</span>
                   </button>
                 </div>
               </div>

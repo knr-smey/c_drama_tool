@@ -614,10 +614,10 @@ class DubbingAPI:
         proxy = options.get("proxy", "").strip()
         gemini_api_key = options.get("gemini_api_key", "").strip() or os.environ.get("GEMINI_API_KEY", "").strip()
         audio_delay_ms = float(options.get("audio_delay_ms", 250))
-        production_mode = options.get("production_mode", "recap")
+        production_mode = options.get("production_mode", "direct")
         vocal_enhancer = options.get("vocal_enhancer", "studio_human")
         if production_mode == "recap":
-            remux_mode = "duck"  # In recap mode, background audio ducking keeps dramatic movie score & SFX
+            remux_mode = "duck"
 
         # Unique session stem directory for this job
         job_id = int(time.time())

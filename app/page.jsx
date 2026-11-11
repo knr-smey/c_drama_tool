@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import MediaSource from '@/components/MediaSource';
-import ProductionStyle from '@/components/ProductionStyle';
 import VoiceSelection from '@/components/VoiceSelection';
 import EngineParameters from '@/components/EngineParameters';
 import TimelineTrack from '@/components/TimelineTrack';
@@ -25,7 +24,6 @@ export default function Home() {
 
   // Parameters State
   const [url, setUrl] = useState('');
-  const [productionMode, setProductionMode] = useState('recap');
   const [voice, setVoice] = useState('km-KH-PisethNeural');
   const [vocalEnhancer, setVocalEnhancer] = useState('studio_human');
   const [whisperModel, setWhisperModel] = useState('base');
@@ -163,7 +161,7 @@ export default function Home() {
       proxy: proxy.trim(),
       gemini_api_key: geminiKey.trim(),
       audio_delay_ms: audioDelay,
-      production_mode: productionMode,
+      production_mode: 'direct',
       vocal_enhancer: vocalEnhancer,
     };
 
@@ -178,7 +176,7 @@ export default function Home() {
     appendLog('INFO', `Starting pipeline for: ${payload.url}`);
     appendLog(
       'INFO',
-      `Mode: ${productionMode.toUpperCase()} | Voice: ${voice} [${vocalEnhancer}] | Model: ${whisperModel}`
+      `Voice: ${voice} [${vocalEnhancer}] | Model: ${whisperModel}`
     );
 
     try {
@@ -302,20 +300,14 @@ export default function Home() {
   };
 
   // Called from MovieExplorerView
-  const handleSelectMovieForDubbing = (movie, preferredMode = 'recap') => {
+  const handleSelectMovieForDubbing = (movie) => {
     setUrl(movie.url);
     setSelectedVideoMeta({
       title: movie.title,
       duration: movie.duration,
     });
-    setProductionMode(preferredMode);
     setActiveTab('editor'); // Switch seamlessly to Editor workspace
-    appendLog(
-      'SUCCESS',
-      `Loaded "${movie.title}" [${movie.duration}] into Editor for ${
-        preferredMode === 'recap' ? 'Drama Recap' : 'Direct Dubbing'
-      }.`
-    );
+    appendLog('SUCCESS', `Loaded "${movie.title}" [${movie.duration}] into Editor.`);
   };
 
   return (
@@ -364,9 +356,6 @@ export default function Home() {
                   onSelectLocalFile={handleSelectLocalFile}
                 />
 
-                {/* Production Style */}
-                <ProductionStyle mode={productionMode} setMode={setProductionMode} />
-
                 {/* Neural Voice & Vocal Realism */}
                 <VoiceSelection
                   voice={voice}
@@ -407,11 +396,7 @@ export default function Home() {
                   ) : (
                     <>
                       <Play className="w-4 h-4 fill-black text-black" />
-                      <span>
-                        {productionMode === 'recap'
-                          ? 'Generate Drama Recap'
-                          : 'Start Dubbing Pipeline'}
-                      </span>
+                      <span>Start Dubbing Pipeline</span>
                     </>
                   )}
                 </button>
