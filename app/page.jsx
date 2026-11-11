@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
+import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import MediaSource from '@/components/MediaSource';
 import ProductionStyle from '@/components/ProductionStyle';
@@ -10,9 +11,18 @@ import TimelineTrack from '@/components/TimelineTrack';
 import TerminalMonitor from '@/components/TerminalMonitor';
 import SuccessBanner from '@/components/SuccessBanner';
 import MovieSearchModal from '@/components/MovieSearchModal';
+
+// Views
+import MovieExplorerView from '@/components/views/MovieExplorerView';
+import MediaLibraryView from '@/components/views/MediaLibraryView';
+import SettingsView from '@/components/views/SettingsView';
+
 import { Play, XCircle } from 'lucide-react';
 
 export default function Home() {
+  // Navigation State
+  const [activeTab, setActiveTab] = useState('editor'); // 'editor' | 'search' | 'library' | 'settings'
+
   // Parameters State
   const [url, setUrl] = useState('');
   const [productionMode, setProductionMode] = useState('recap');
@@ -37,7 +47,7 @@ export default function Home() {
   const [logs, setLogs] = useState([]);
   const [autoScroll, setAutoScroll] = useState(true);
 
-  // Modal State
+  // Quick Modal State
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Load saved AI Key from localStorage on mount
@@ -137,7 +147,7 @@ export default function Home() {
     setLogs((prev) => [...prev, { time, level, message, khmerText }]);
   };
 
-  // Actions
+  // Pipeline Actions
   const handleStartPipeline = async () => {
     if (!url.trim()) {
       appendLog('ERROR', 'Please specify a target video URL or select a local video.');
@@ -200,7 +210,6 @@ export default function Home() {
   };
 
   const handleSelectLocalFile = async () => {
-    // Check if Electron native file dialog is available
     if (typeof window !== 'undefined' && window.electronAPI && window.electronAPI.selectFile) {
       try {
         const filePath = await window.electronAPI.selectFile();
@@ -213,7 +222,6 @@ export default function Home() {
         appendLog('ERROR', `File dialog error: ${err.message || err}`);
       }
     } else {
-      // Fallback file input
       const fileInput = document.getElementById('nextjs-file-input');
       if (fileInput) fileInput.click();
     }
@@ -261,18 +269,17 @@ export default function Home() {
     }
   };
 
-  const handlePlayVideo = async () => {
-    if (!completedData) return;
-    if (completedData.downloadUrl) {
-      window.open(completedData.downloadUrl, '_blank');
+  const handlePlayVideoPath = async (filePath, downloadUrl) => {
+    if (downloadUrl) {
+      window.open(downloadUrl, '_blank');
       return;
     }
-    if (completedData.outputPath) {
+    if (filePath) {
       try {
         await fetch('/api/open_video', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ file_path: completedData.outputPath }),
+          body: JSON.stringify({ file_path: filePath }),
         });
       } catch (err) {
         appendLog('ERROR', `Playback error: ${err.message || err}`);
@@ -280,168 +287,221 @@ export default function Home() {
     }
   };
 
-  const handleRevealFile = async () => {
-    if (!completedData || !completedData.outputPath) return;
-    try {
-      await fetch('/api/reveal_in_folder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ file_path: completedData.outputPath }),
-      });
-    } catch (err) {
-      appendLog('ERROR', `Reveal file error: ${err.message || err}`);
+  const handleRevealPath = async (filePath) => {
+    if (filePath) {
+      try {
+        await fetch('/api/reveal_in_folder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_path: filePath }),
+        });
+      } catch (err) {
+        appendLog('ERROR', `Reveal error: ${err.message || err}`);
+      }
     }
   };
 
-  const handleSelectMovieFromSearch = (movie) => {
+  // Called from MovieExplorerView
+  const handleSelectMovieForDubbing = (movie, preferredMode = 'recap') => {
     setUrl(movie.url);
     setSelectedVideoMeta({
       title: movie.title,
       duration: movie.duration,
     });
-    setIsSearchOpen(false);
-    appendLog('SUCCESS', `Imported online video: "${movie.title}" [${movie.duration}]. Ready to dub!`);
+    setProductionMode(preferredMode);
+    setActiveTab('editor'); // Switch seamlessly to Editor workspace
+    appendLog(
+      'SUCCESS',
+      `Loaded "${movie.title}" [${movie.duration}] into Editor for ${
+        preferredMode === 'recap' ? 'Drama Recap (សង្ខេបរឿង)' : 'Direct Dubbing'
+      }.`
+    );
   };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-editor-black select-none font-sans text-white">
-      {/* Top Application Bar */}
-      <Header
+    <div className="h-screen flex overflow-hidden bg-editor-black select-none font-sans text-white">
+      {/* 1. Sidebar Navigation Menu */}
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
         systemStatus={systemStatus}
-        engineInfo="Whisper + Edge TTS (km-KH)"
-        onOpenSearch={() => setIsSearchOpen(true)}
         onOpenOutputDir={handleOpenOutputDir}
-        onClearLogs={() => setLogs([])}
         onQuit={handleQuit}
       />
 
-      {/* Main Two-Pane Split Dashboard */}
-      <main className="flex-1 flex overflow-hidden bg-editor-black">
-        {/* Left Inspector Panel (420px) */}
-        <aside className="w-[420px] border-r border-editor-border bg-editor-panel flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-4">
-          <div className="space-y-4">
-            {/* Project Settings Title */}
-            <div className="pb-1 border-b border-editor-border/60 flex items-center justify-between">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                <span className="w-1.5 h-3 bg-editor-orange rounded-sm" />
-                Project Settings
-              </h2>
-              <span className="text-[10px] text-zinc-500 font-mono">Parameters</span>
-            </div>
+      {/* 2. Main Dynamic Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden bg-editor-black">
+        {/* Top Header Bar */}
+        <Header
+          systemStatus={systemStatus}
+          engineInfo="Whisper + Edge TTS (km-KH)"
+          onOpenSearch={() => setIsSearchOpen(true)}
+          onOpenOutputDir={handleOpenOutputDir}
+          onClearLogs={() => setLogs([])}
+          onQuit={handleQuit}
+        />
 
-            {/* 1. Media Source Input */}
-            <MediaSource
-              url={url}
-              setUrl={setUrl}
-              selectedVideoMeta={selectedVideoMeta}
-              onOpenSearch={() => setIsSearchOpen(true)}
-              onSelectLocalFile={handleSelectLocalFile}
-            />
+        {/* View Switcher */}
+        {activeTab === 'editor' && (
+          <main className="flex-1 flex overflow-hidden bg-editor-black">
+            {/* Left Inspector Panel (420px) */}
+            <aside className="w-[420px] border-r border-editor-border bg-editor-panel flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-4">
+              <div className="space-y-4">
+                <div className="pb-1 border-b border-editor-border/60 flex items-center justify-between">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                    <span className="w-1.5 h-3 bg-editor-orange rounded-sm" />
+                    Dubbing Parameters
+                  </h2>
+                  <span className="text-[10px] text-zinc-500 font-mono">Inspector</span>
+                </div>
 
-            {/* 2. Production Style Selection */}
-            <ProductionStyle mode={productionMode} setMode={setProductionMode} />
+                {/* Media Source Input */}
+                <MediaSource
+                  url={url}
+                  setUrl={setUrl}
+                  selectedVideoMeta={selectedVideoMeta}
+                  onOpenSearch={() => setIsSearchOpen(true)}
+                  onSelectLocalFile={handleSelectLocalFile}
+                />
 
-            {/* 3. Neural Voice & Vocal Realism */}
-            <VoiceSelection
-              voice={voice}
-              setVoice={setVoice}
-              vocalEnhancer={vocalEnhancer}
-              setVocalEnhancer={setVocalEnhancer}
-            />
+                {/* Production Style */}
+                <ProductionStyle mode={productionMode} setMode={setProductionMode} />
 
-            {/* 4. Engine Parameters */}
-            <EngineParameters
-              whisperModel={whisperModel}
-              setWhisperModel={setWhisperModel}
-              speechRate={speechRate}
-              setSpeechRate={setSpeechRate}
-              audioDelay={audioDelay}
-              setAudioDelay={setAudioDelay}
-              geminiKey={geminiKey}
-              setGeminiKey={setGeminiKey}
-              remuxMode={remuxMode}
-              setRemuxMode={setRemuxMode}
-              proxy={proxy}
-              setProxy={setProxy}
-            />
-          </div>
+                {/* Neural Voice & Vocal Realism */}
+                <VoiceSelection
+                  voice={voice}
+                  setVoice={setVoice}
+                  vocalEnhancer={vocalEnhancer}
+                  setVocalEnhancer={setVocalEnhancer}
+                />
 
-          {/* Action Trigger Buttons */}
-          <div className="pt-3 border-t border-editor-border space-y-2">
-            <button
-              onClick={handleStartPipeline}
-              disabled={isRunning}
-              className="w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider text-black bg-editor-orange hover:bg-editor-orangeHover active:scale-[0.99] shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isRunning ? (
-                <>
-                  <span className="inline-block animate-spin mr-1">⟳</span>
-                  <span>Processing Pipeline...</span>
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 fill-black text-black" />
-                  <span>
-                    {productionMode === 'recap'
-                      ? 'Generate Drama Recap (សង្ខេបរឿង)'
-                      : 'Start Dubbing Pipeline'}
-                  </span>
-                </>
-              )}
-            </button>
+                {/* Engine Settings */}
+                <EngineParameters
+                  whisperModel={whisperModel}
+                  setWhisperModel={setWhisperModel}
+                  speechRate={speechRate}
+                  setSpeechRate={setSpeechRate}
+                  audioDelay={audioDelay}
+                  setAudioDelay={setAudioDelay}
+                  geminiKey={geminiKey}
+                  setGeminiKey={setGeminiKey}
+                  remuxMode={remuxMode}
+                  setRemuxMode={setRemuxMode}
+                  proxy={proxy}
+                  setProxy={setProxy}
+                />
+              </div>
 
-            {isRunning && (
-              <button
-                onClick={handleCancelPipeline}
-                className="w-full py-2 px-3 rounded-lg text-xs font-bold text-editor-orange hover:text-white hover:bg-orange-500/10 border border-editor-orange/30 transition-all flex items-center justify-center gap-1.5"
-              >
-                <XCircle className="w-3.5 h-3.5" />
-                <span>Cancel Operation</span>
-              </button>
-            )}
-          </div>
-        </aside>
+              {/* Action Buttons */}
+              <div className="pt-3 border-t border-editor-border space-y-2">
+                <button
+                  onClick={handleStartPipeline}
+                  disabled={isRunning}
+                  className="w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider text-black bg-editor-orange hover:bg-editor-orangeHover active:scale-[0.99] shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isRunning ? (
+                    <>
+                      <span className="inline-block animate-spin mr-1">⟳</span>
+                      <span>Processing Pipeline...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 fill-black text-black" />
+                      <span>
+                        {productionMode === 'recap'
+                          ? 'Generate Drama Recap (សង្ខេបរឿង)'
+                          : 'Start Dubbing Pipeline'}
+                      </span>
+                    </>
+                  )}
+                </button>
 
-        {/* Right Workspace: Timeline Track & Output Console */}
-        <section className="flex-1 flex flex-col overflow-hidden bg-editor-black p-5 space-y-4">
-          {/* Top: Timeline Track */}
-          <TimelineTrack
-            currentStage={currentStage}
-            stageBadge={stageBadge}
-            stageHeadline={stageHeadline}
-            progressPct={progressPct}
+                {isRunning && (
+                  <button
+                    onClick={handleCancelPipeline}
+                    className="w-full py-2 px-3 rounded-lg text-xs font-bold text-editor-orange hover:text-white hover:bg-orange-500/10 border border-editor-orange/30 transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                    <span>Cancel Operation</span>
+                  </button>
+                )}
+              </div>
+            </aside>
+
+            {/* Right Canvas: Timeline Track & Output Console */}
+            <section className="flex-1 flex flex-col overflow-hidden bg-editor-black p-5 space-y-4">
+              <TimelineTrack
+                currentStage={currentStage}
+                stageBadge={stageBadge}
+                stageHeadline={stageHeadline}
+                progressPct={progressPct}
+              />
+
+              <SuccessBanner
+                completedData={completedData}
+                onPlayVideo={() => handlePlayVideoPath(completedData?.outputPath, completedData?.downloadUrl)}
+                onRevealFile={() => handleRevealPath(completedData?.outputPath)}
+              />
+
+              <TerminalMonitor
+                logs={logs}
+                autoScroll={autoScroll}
+                setAutoScroll={setAutoScroll}
+                onCopyLogs={() => {
+                  const text = logs.map((l) => `[${l.time}] [${l.level}] ${l.message}`).join('\n');
+                  navigator.clipboard.writeText(text);
+                  appendLog('INFO', 'Logs copied to clipboard.');
+                }}
+              />
+            </section>
+          </main>
+        )}
+
+        {activeTab === 'search' && (
+          <MovieExplorerView
+            onSelectMovieForDubbing={handleSelectMovieForDubbing}
+            proxy={proxy}
           />
+        )}
 
-          {/* Success Notification Banner */}
-          <SuccessBanner
-            completedData={completedData}
-            onPlayVideo={handlePlayVideo}
-            onRevealFile={handleRevealFile}
+        {activeTab === 'library' && (
+          <MediaLibraryView
+            onPlayVideoPath={handlePlayVideoPath}
+            onRevealPath={handleRevealPath}
+            onOpenFolder={handleOpenOutputDir}
           />
+        )}
 
-          {/* Bottom: Monitored Console Logs */}
-          <TerminalMonitor
-            logs={logs}
-            autoScroll={autoScroll}
-            setAutoScroll={setAutoScroll}
-            onCopyLogs={() => {
-              const text = logs.map((l) => `[${l.time}] [${l.level}] ${l.message}`).join('\n');
-              navigator.clipboard.writeText(text);
-              appendLog('INFO', 'Logs copied to clipboard.');
-            }}
+        {activeTab === 'settings' && (
+          <SettingsView
+            geminiKey={geminiKey}
+            setGeminiKey={setGeminiKey}
+            whisperModel={whisperModel}
+            setWhisperModel={setWhisperModel}
+            speechRate={speechRate}
+            setSpeechRate={setSpeechRate}
+            audioDelay={audioDelay}
+            setAudioDelay={setAudioDelay}
+            voice={voice}
+            setVoice={setVoice}
+            vocalEnhancer={vocalEnhancer}
+            setVocalEnhancer={setVocalEnhancer}
+            proxy={proxy}
+            setProxy={setProxy}
+            onOpenFolder={handleOpenOutputDir}
           />
-        </section>
-      </main>
+        )}
+      </div>
 
-      {/* Online Drama Search Modal */}
+      {/* Quick Search Modal */}
       <MovieSearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
-        onSelectMovie={handleSelectMovieFromSearch}
+        onSelectMovie={(movie) => handleSelectMovieForDubbing(movie, productionMode)}
         proxy={proxy}
       />
 
-      {/* Hidden file input for web fallback */}
+      {/* Hidden file input for file upload fallback */}
       <input
         type="file"
         id="nextjs-file-input"

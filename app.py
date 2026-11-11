@@ -520,6 +520,27 @@ class DubbingAPI:
         except Exception as e:
             return {"error": str(e), "results": []}
 
+    def list_library(self) -> dict:
+        """Returns list of exported videos in the output directory."""
+        items = []
+        if os.path.isdir(OUTPUT_DIR):
+            for fname in sorted(os.listdir(OUTPUT_DIR), reverse=True):
+                fpath = os.path.join(OUTPUT_DIR, fname)
+                if os.path.isfile(fpath) and fname.lower().endswith((".mp4", ".mkv", ".mov", ".webm", ".avi")):
+                    try:
+                        stat = os.stat(fpath)
+                        size_mb = stat.st_size / (1024 * 1024)
+                        mtime_str = time.strftime("%Y-%m-%d %H:%M", time.localtime(stat.st_mtime))
+                        items.append({
+                            "filename": fname,
+                            "path": fpath,
+                            "size_mb": round(size_mb, 2),
+                            "created_at": mtime_str
+                        })
+                    except Exception:
+                        pass
+        return {"items": items, "count": len(items), "output_dir": OUTPUT_DIR}
+
     def close_app(self) -> dict:
         """Force quits the desktop application immediately."""
         def _force_exit():

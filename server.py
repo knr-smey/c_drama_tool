@@ -93,6 +93,14 @@ def search_movies():
     return jsonify(api.search_movies(query, limit, proxy))
 
 
+@app.get("/api/list_library")
+def list_library():
+    res = api.list_library()
+    for item in res.get("items", []):
+        item["download_url"] = "/api/download/" + urllib.parse.quote(item["filename"])
+    return jsonify(res)
+
+
 @app.post("/api/open_output_folder")
 def open_output_folder():
     return jsonify(
