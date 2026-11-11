@@ -25,57 +25,65 @@ export default function TimelineTrack({
   };
 
   return (
-    <div className="bg-editor-panel border border-editor-border rounded-xl p-4 shadow-xl space-y-3.5">
+    <div className="bg-white border border-[#ebe7df] rounded-2xl p-5 shadow-sm space-y-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-editor-orange" />
-          <span className="text-xs font-bold uppercase tracking-wider text-white">Pipeline Timeline</span>
-          <span className="text-zinc-600">•</span>
-          <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-900 text-zinc-300 border border-editor-border">
+        <div className="flex items-center gap-2.5">
+          <span className="w-2.5 h-2.5 rounded-full bg-dash-orange" />
+          <span className="text-xs font-bold uppercase tracking-wider text-zinc-900">Pipeline Timeline</span>
+          <span className="text-zinc-300">•</span>
+          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-orange-50 text-dash-orange border border-orange-200">
             {stageBadge}
           </span>
-          <span className="text-zinc-400 text-xs truncate max-w-[420px]">{stageHeadline}</span>
+          <span className="text-zinc-500 text-xs truncate max-w-[420px]">{stageHeadline}</span>
         </div>
         <div className="text-right">
-          <span className="text-2xl font-black tracking-tight text-editor-orange font-mono">
+          <span className="text-3xl font-black tracking-tight text-dash-orange font-mono">
             {Math.round(progressPct)}%
           </span>
         </div>
       </div>
 
       {/* Main Clean Orange Progress Bar */}
-      <div className="w-full h-2.5 bg-editor-black rounded-full overflow-hidden p-0.5 border border-editor-border">
+      <div className="w-full h-2.5 bg-[#f4f1ea] rounded-full overflow-hidden p-0.5 border border-[#e5e1d8]">
         <div
-          className="h-full rounded-full bg-editor-orange transition-all duration-300 ease-out shadow-md shadow-orange-500/30"
+          className="h-full rounded-full bg-gradient-to-r from-dash-orange to-orange-500 transition-all duration-300 ease-out shadow-sm shadow-orange-500/20"
           style={{ width: `${Math.min(100, Math.max(0, progressPct))}%` }}
         />
       </div>
 
       {/* 6 Step Cards */}
-      <div className="grid grid-cols-6 gap-2 pt-0.5">
+      <div className="grid grid-cols-6 gap-2.5 pt-0.5">
         {STAGES.map((s) => {
           const status = getStepStatus(s.id);
 
           let cardClass =
-            'step-card p-2.5 rounded-lg border border-editor-border bg-editor-card transition-all duration-200';
-          let numClass = 'text-[10px] font-mono font-bold text-zinc-500 step-num';
-          let icon = <CircleDashed className="w-3 h-3 text-zinc-600" />;
+            'step-card p-3 rounded-xl border border-[#e5e1d8] bg-[#faf9f5] transition-all duration-200';
+          let numClass = 'text-[10px] font-mono font-bold text-zinc-400 step-num';
+          let titleClass = 'text-xs font-bold text-zinc-700';
+          let subClass = 'text-[10px] text-zinc-400 font-mono truncate';
+          let icon = <CircleDashed className="w-3.5 h-3.5 text-zinc-400" />;
 
           if (status === 'active') {
             cardClass =
-              'step-card p-2.5 rounded-lg border-2 border-editor-orange bg-editor-orangeDim shadow-md shadow-orange-500/10 ring-1 ring-orange-500/30 transition-all duration-200';
-            numClass = 'text-[10px] font-mono font-bold text-editor-orange step-num';
-            icon = <span className="inline-block w-2 h-2 rounded-full bg-editor-orange animate-ping" />;
+              'step-card p-3 rounded-xl border-2 border-dash-orange bg-orange-50/70 shadow-sm shadow-orange-500/10 ring-1 ring-orange-500/20 transition-all duration-200';
+            numClass = 'text-[10px] font-mono font-bold text-dash-orange step-num';
+            titleClass = 'text-xs font-extrabold text-zinc-900';
+            subClass = 'text-[10px] text-dash-orange font-mono truncate font-semibold';
+            icon = <span className="inline-block w-2 h-2 rounded-full bg-dash-orange animate-ping" />;
           } else if (status === 'completed') {
             cardClass =
-              'step-card p-2.5 rounded-lg border border-zinc-700 bg-zinc-900 transition-all duration-200';
-            numClass = 'text-[10px] font-mono font-bold text-white step-num';
-            icon = <Check className="w-3 h-3 text-editor-orange stroke-[3]" />;
+              'step-card p-3 rounded-xl border border-emerald-300 bg-emerald-50/30 transition-all duration-200';
+            numClass = 'text-[10px] font-mono font-bold text-emerald-600 step-num';
+            titleClass = 'text-xs font-bold text-zinc-900';
+            subClass = 'text-[10px] text-zinc-500 font-mono truncate';
+            icon = <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />;
           } else if (status === 'error') {
             cardClass =
-              'step-card p-2.5 rounded-lg border border-red-600 bg-red-950/20 transition-all duration-200';
-            numClass = 'text-[10px] font-mono font-bold text-red-400 step-num';
-            icon = <AlertTriangle className="w-3 h-3 text-red-400" />;
+              'step-card p-3 rounded-xl border border-red-300 bg-red-50/50 transition-all duration-200';
+            numClass = 'text-[10px] font-mono font-bold text-red-500 step-num';
+            titleClass = 'text-xs font-bold text-red-900';
+            subClass = 'text-[10px] text-red-400 font-mono truncate';
+            icon = <AlertTriangle className="w-3.5 h-3.5 text-red-500" />;
           }
 
           return (
@@ -84,8 +92,8 @@ export default function TimelineTrack({
                 <span className={numClass}>0{s.id}</span>
                 <span className="step-status">{icon}</span>
               </div>
-              <div className="text-xs font-bold text-white">{s.name}</div>
-              <div className="text-[10px] text-zinc-500 font-mono truncate">{s.sub}</div>
+              <div className={titleClass}>{s.name}</div>
+              <div className={subClass}>{s.sub}</div>
             </div>
           );
         })}

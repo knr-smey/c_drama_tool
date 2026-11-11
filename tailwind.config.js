@@ -9,6 +9,21 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        dash: {
+          bg: '#f6f5f0',
+          sidebar: '#fbfaf7',
+          card: '#ffffff',
+          cardBorder: '#ebe7df',
+          topbar: '#1d1e24',
+          topbarSearch: '#2c2e37',
+          orange: '#ff6b00',
+          orangeHover: '#ff7d1a',
+          orangeLight: '#fff7ed',
+          orangeBorder: '#fed7aa',
+          text: '#18181b',
+          textMuted: '#71717a',
+          textDim: '#a1a1aa',
+        },
         editor: {
           black: '#000000',
           bg: '#09090b',

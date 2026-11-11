@@ -311,7 +311,7 @@ export default function Home() {
   };
 
   return (
-    <div className="h-screen flex overflow-hidden bg-editor-black select-none font-sans text-white">
+    <div className="h-screen flex overflow-hidden bg-[#f6f5f0] select-none font-sans text-zinc-900">
       {/* 1. Sidebar Navigation Menu */}
       <Sidebar
         activeTab={activeTab}
@@ -322,7 +322,7 @@ export default function Home() {
       />
 
       {/* 2. Main Dynamic Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-editor-black">
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#f6f5f0]">
         {/* Top Header Bar */}
         <Header
           systemStatus={systemStatus}
@@ -335,9 +335,56 @@ export default function Home() {
 
         {/* View Switcher */}
         {activeTab === 'editor' && (
-          <main className="flex-1 flex overflow-hidden bg-editor-black">
-            {/* Left/Center Canvas: Timeline Track & Output Console */}
-            <section className="flex-1 flex flex-col overflow-hidden bg-editor-black p-5 space-y-4">
+          <main className="flex-1 flex overflow-hidden bg-[#f6f5f0]">
+            {/* Left/Center Canvas: Greeting Stats + Timeline + Output Console */}
+            <section className="flex-1 flex flex-col overflow-hidden bg-[#f6f5f0] p-5 space-y-4">
+              
+              {/* Studio Overview Card (Matching reference top card with stats & wave) */}
+              <div className="bg-white border border-[#ebe7df] rounded-2xl p-5 shadow-sm flex items-center justify-between shrink-0">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-dash-orange" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-dash-orange font-mono">AI Dubbing Engine</span>
+                  </div>
+                  <h2 className="text-xl font-extrabold text-zinc-900 tracking-tight">Studio Dashboard</h2>
+                  <p className="text-xs text-zinc-500">Automated speech extraction, translation, and neural voice remuxing.</p>
+                </div>
+
+                {/* Right Visual Stats & Wave */}
+                <div className="flex items-center gap-6">
+                  {/* Mini Stats Column */}
+                  <div className="flex items-center gap-4 text-center">
+                    <div className="bg-[#faf9f5] border border-[#ebe7df] px-3.5 py-2 rounded-xl">
+                      <div className="text-sm font-extrabold text-zinc-900 font-mono">
+                        {systemStatus === 'Processing' ? '1' : '0'}
+                      </div>
+                      <div className="text-[10px] text-zinc-400 font-medium">Active</div>
+                    </div>
+                    <div className="bg-[#faf9f5] border border-[#ebe7df] px-3.5 py-2 rounded-xl">
+                      <div className="text-sm font-extrabold text-zinc-900 font-mono">
+                        {whisperModel}
+                      </div>
+                      <div className="text-[10px] text-zinc-400 font-medium">Whisper</div>
+                    </div>
+                  </div>
+
+                  {/* Decorative Orange Waveform Graph (like reference image) */}
+                  <div className="hidden lg:block w-44 h-12 relative">
+                    <svg className="w-full h-full overflow-visible" viewBox="0 0 160 50">
+                      <path
+                        d="M0,35 Q20,15 40,28 T80,10 T120,30 T160,18"
+                        fill="none"
+                        stroke="#ff6b00"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      />
+                      <circle cx="120" cy="30" r="3.5" fill="#ff6b00" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Timeline Track Card */}
               <TimelineTrack
                 currentStage={currentStage}
                 stageBadge={stageBadge}
@@ -345,12 +392,14 @@ export default function Home() {
                 progressPct={progressPct}
               />
 
+              {/* Video Complete Banner */}
               <SuccessBanner
                 completedData={completedData}
                 onPlayVideo={() => handlePlayVideoPath(completedData?.outputPath, completedData?.downloadUrl)}
                 onRevealFile={() => handleRevealPath(completedData?.outputPath)}
               />
 
+              {/* Activity Log Monitor Card */}
               <TerminalMonitor
                 logs={logs}
                 autoScroll={autoScroll}
@@ -363,15 +412,15 @@ export default function Home() {
               />
             </section>
 
-            {/* Right Inspector Panel (420px) */}
-            <aside className="w-[420px] border-l border-editor-border bg-editor-panel flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-4">
+            {/* Right Inspector Panel (400px) */}
+            <aside className="w-[400px] border-l border-[#ebe7df] bg-[#fbfaf7] flex flex-col justify-between shrink-0 overflow-y-auto p-5 space-y-4">
               <div className="space-y-4">
-                <div className="pb-1 border-b border-editor-border/60 flex items-center justify-between">
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                    <span className="w-1.5 h-3 bg-editor-orange rounded-sm" />
+                <div className="pb-1 border-b border-[#ebe7df] flex items-center justify-between">
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-900 flex items-center gap-2">
+                    <span className="w-1.5 h-3 bg-dash-orange rounded-sm" />
                     Dubbing Parameters
                   </h2>
-                  <span className="text-[10px] text-zinc-500 font-mono">Inspector</span>
+                  <span className="text-[10px] text-zinc-400 font-mono">Inspector</span>
                 </div>
 
                 {/* Media Source Input */}
@@ -409,11 +458,11 @@ export default function Home() {
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-3 border-t border-editor-border space-y-2">
+              <div className="pt-3 border-t border-[#ebe7df] space-y-2">
                 <button
                   onClick={handleStartPipeline}
                   disabled={isRunning}
-                  className="w-full py-3 px-4 rounded-xl font-black text-xs uppercase tracking-wider text-black bg-editor-orange hover:bg-editor-orangeHover active:scale-[0.99] shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-dash-orange hover:bg-orange-600 active:scale-[0.99] shadow-md shadow-orange-500/30 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isRunning ? (
                     <>
@@ -422,7 +471,7 @@ export default function Home() {
                     </>
                   ) : (
                     <>
-                      <Play className="w-4 h-4 fill-black text-black" />
+                      <Play className="w-4 h-4 fill-white text-white" />
                       <span>Start Dubbing Pipeline</span>
                     </>
                   )}
@@ -431,7 +480,7 @@ export default function Home() {
                 {isRunning && (
                   <button
                     onClick={handleCancelPipeline}
-                    className="w-full py-2 px-3 rounded-lg text-xs font-bold text-editor-orange hover:text-white hover:bg-orange-500/10 border border-editor-orange/30 transition-all flex items-center justify-center gap-1.5"
+                    className="w-full py-2 px-3 rounded-xl text-xs font-bold text-dash-orange hover:bg-orange-100/60 border border-orange-300 transition-all flex items-center justify-center gap-1.5"
                   >
                     <XCircle className="w-3.5 h-3.5" />
                     <span>Cancel Operation</span>

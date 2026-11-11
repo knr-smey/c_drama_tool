@@ -20,38 +20,33 @@ export default function TerminalMonitor({
   const renderBadge = (level) => {
     switch ((level || '').toUpperCase()) {
       case 'SUCCESS':
-        return <span className="text-editor-orange font-bold font-mono">[SUCCESS]</span>;
+        return <span className="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded text-[10px] font-mono">OK</span>;
       case 'ERROR':
-        return <span className="bg-editor-orange text-black font-extrabold px-1 rounded font-mono">[ERROR]</span>;
+        return <span className="bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded text-[10px] font-mono">ERR</span>;
       case 'WARN':
-        return <span className="text-orange-300 font-bold font-mono">[WARN]</span>;
+        return <span className="bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded text-[10px] font-mono">WRN</span>;
       case 'TRANSLATE':
-        return <span className="text-editor-orange font-bold font-mono">[TRANSLATE]</span>;
+        return <span className="bg-orange-100 text-dash-orange font-bold px-1.5 py-0.5 rounded text-[10px] font-mono">DUB</span>;
       case 'WHISPER':
-        return <span className="text-zinc-300 font-bold font-mono">[SPEECH]</span>;
+        return <span className="bg-zinc-100 text-zinc-700 font-bold px-1.5 py-0.5 rounded text-[10px] font-mono">AI</span>;
       default:
-        return <span className="text-zinc-400 font-bold font-mono">[INFO]</span>;
+        return <span className="bg-zinc-100 text-zinc-600 font-bold px-1.5 py-0.5 rounded text-[10px] font-mono">INFO</span>;
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-editor-black border border-editor-border rounded-xl overflow-hidden shadow-2xl">
+    <div className="flex-1 flex flex-col bg-white border border-[#ebe7df] rounded-2xl overflow-hidden shadow-sm">
       {/* Header Bar */}
-      <div className="h-9 bg-editor-panel border-b border-editor-border px-4 flex items-center justify-between shrink-0">
+      <div className="h-10 bg-[#faf9f5] border-b border-[#ebe7df] px-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-zinc-800" />
-            <span className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-            <span className="w-2.5 h-2.5 rounded-full bg-editor-orange" />
-          </div>
-          <span className="text-[11px] font-mono text-zinc-300 ml-2 flex items-center gap-1.5">
-            <Terminal className="w-3.5 h-3.5 text-editor-orange" />
-            Output Monitor
+          <span className="text-xs font-bold text-zinc-800 flex items-center gap-1.5">
+            <Terminal className="w-3.5 h-3.5 text-dash-orange" />
+            Activity Monitor
           </span>
         </div>
 
         <div className="flex items-center gap-3 font-mono">
-          <label className="flex items-center gap-1.5 text-[10px] text-zinc-400 cursor-pointer select-none">
+          <label className="flex items-center gap-1.5 text-[11px] text-zinc-500 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={autoScroll}
@@ -62,10 +57,10 @@ export default function TerminalMonitor({
           </label>
           <button
             onClick={onCopyLogs}
-            className="text-[10px] text-zinc-400 hover:text-white flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-zinc-800 transition-colors"
+            className="text-[11px] text-zinc-500 hover:text-zinc-900 flex items-center gap-1 px-2 py-0.5 rounded-lg hover:bg-zinc-100 transition-colors"
           >
             <Copy className="w-3 h-3" />
-            Copy Logs
+            Copy
           </button>
         </div>
       </div>
@@ -73,23 +68,24 @@ export default function TerminalMonitor({
       {/* Logs Viewport */}
       <div
         ref={scrollRef}
-        className="flex-1 p-4 font-mono text-xs overflow-y-auto space-y-1.5 leading-relaxed bg-editor-black text-zinc-300"
+        className="flex-1 p-4 font-mono text-xs overflow-y-auto space-y-2 leading-relaxed bg-white text-zinc-700"
       >
         {logs.length === 0 ? (
-          <div className="text-zinc-500 italic">
+          <div className="text-zinc-400 italic">
             [System initialized] KhmerDubStudio ready. Enter a video URL or search online to begin.
           </div>
         ) : (
           logs.map((item, idx) => (
             <div key={idx} className="flex items-start gap-2 text-[11px] leading-5 font-mono">
-              <div className="shrink-0">
-                <span className="text-zinc-600">[{item.time}]</span> {renderBadge(item.level)}
+              <div className="shrink-0 flex items-center gap-1.5">
+                <span className="text-zinc-400 text-[10px]">[{item.time}]</span>
+                {renderBadge(item.level)}
               </div>
               <div className="flex-1">
-                <span className="text-zinc-200">{item.message}</span>
+                <span className="text-zinc-800 font-medium">{item.message}</span>
                 {item.khmerText && (
-                  <div className="mt-1 ml-3 text-white font-sans text-xs bg-editor-card px-2.5 py-1.5 rounded border border-editor-orange/40">
-                    ➔ Voiceover / Dub Script: {item.khmerText}
+                  <div className="mt-1 ml-2 text-zinc-900 font-sans text-xs bg-orange-50/70 px-3 py-1.5 rounded-xl border border-orange-200">
+                    ➔ Dub Script: {item.khmerText}
                   </div>
                 )}
               </div>

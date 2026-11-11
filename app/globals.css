@@ -4,21 +4,21 @@
 
 @layer base {
   body {
-    @apply bg-editor-black text-white antialiased select-none;
+    @apply bg-[#f6f5f0] text-zinc-900 antialiased select-none;
   }
 }
 
 /* Custom Sleek Scrollbars */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
-  border-radius: 4px;
+  background: #d4d0c7;
+  border-radius: 6px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #ff6b00;
